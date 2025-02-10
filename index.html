@@ -17,16 +17,33 @@
     
 
     <body>
+
+
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
         <div class="topnav">
-            <a href="#ProfessionalProfile">Professional Profile</a>
-            <a href="#Education">Education</a>
-            <a href="#WorkExperience">Work Experience</a>
-            <a href="#Projects">Projects</a>
-            <a href="#AwardsandScholarships">Awards and Scholarships</a>
-            <a href="#TechnicalStrengths">Technical Strengths</a>
-            <a href="#VolunteerExperience">Volunteer Experience</a>
-            <a href="#Hobbies">Hobbies</a>
-          </div>
+            <a href="" class="active">Home</a>
+        <div id="myLinks">
+            
+            <a href="#ProfessionalProfile" onclick="myFunction()">Professional Profile</a>
+            <a href="#Education" onclick="myFunction()">Education</a>
+            <a href="#WorkExperience" onclick="myFunction()">Work Experience</a>
+            <a href="#Projects" onclick="myFunction()">Projects</a>
+            <a href="#AwardsandScholarships" onclick="myFunction()">Awards and Scholarships</a>
+            <a href="#TechnicalStrengths" onclick="myFunction()">Technical Strengths</a>
+            <a href="#VolunteerExperience" onclick="myFunction()">Volunteer Experience</a>
+            <a href="#Hobbies" onclick="myFunction()">Hobbies</a>
+        </div>
+        <!-- "Hamburger menu" / "Bar icon" to toggle the navigation links -->
+        <a href="javascript:void(0);" class="icon" onclick="myFunction()">
+            <i class="fa fa-bars"></i>
+        </a>
+        </div>
+
+
+
+
+
         <div class="container">
         <h1>
             Jared Hirt
@@ -303,4 +320,17 @@
 
         </div>
     </body>
+
+
+
+    <script>
+        function myFunction() {
+          var x = document.getElementById("myLinks");
+          if (x.style.display === "block") {
+            x.style.display = "none";
+          } else {
+            x.style.display = "block";
+          }
+        }
+        </script>
 </html>
