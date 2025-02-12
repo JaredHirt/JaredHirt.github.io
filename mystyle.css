@@ -46,7 +46,13 @@ body {
 /* Add a grey background color on mouse-over */
 .topnav a:hover {
   background-color: #ddd;
-  color: black;
+  color: #000000;
+}
+
+.center {
+  margin-left:auto;
+  margin-right:auto;
+  text-align:center;
 }
 
 
@@ -61,7 +67,7 @@ body {
     scroll-padding-top: 30px;
     width: 80%; /* Adjust width as needed */
     max-width: 1200px; /* Optional: Set a max-width */
-    text-align: center; /* Center text inside the container */
+    text-align: left; /* Center text inside the container */
     background-color: white;
     padding: 20px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
