@@ -42,6 +42,8 @@ body {
         width: auto;
         background: none;
         position: static;
+        flex-wrap: wrap; /* Allow wrapping if needed */
+        justify-content: center; /* Center items */
     }
     .topnav a.icon {
         display: none; /* Hide hamburger on desktop */
@@ -55,11 +57,12 @@ body {
 /* Style navigation menu links */
 .topnav a {
     color: white;
-    padding: 14px 20px;
+    padding: 14px 15px; /* Slightly reduced padding */
     text-decoration: none;
-    font-size: 16px;
+    font-size: 15px; /* Slightly smaller font size */
     font-weight: 500;
     transition: background-color 0.3s;
+    white-space: nowrap; /* Prevent text wrapping */
 }
 
 /* Style the hamburger menu */
@@ -152,10 +155,14 @@ li {
 img {
     width: 200px; /* Smaller, more standard headshot size */
     height: 200px;
-    object-fit: cover;
+    object-fit: cover; /* Ensures image fills circle without distortion */
+    object-position: center top; /* Focuses on the top center of the image (face) */
     border-radius: 50%; /* Circular headshot */
     box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     margin-top: 20px;
+    display: block; /* Helps with centering */
+    margin-left: auto;
+    margin-right: auto;
 }
 
 a {
