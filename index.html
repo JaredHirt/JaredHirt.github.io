@@ -25,15 +25,15 @@
             <a href="" class="active">Home</a>
         <div id="myLinks">
             
-            <a href="#ProfessionalProfile" onclick="myFunction()">Professional Profile</a>
+            <a href="#ResearchInterests" onclick="myFunction()">Research Interests</a>
             <a href="#Education" onclick="myFunction()">Education</a>
-            <a href="#Research" onclick="myFunction()">Research</a>
-            <a href="#WorkExperience" onclick="myFunction()">Work Experience</a>
-            <a href="#Projects" onclick="myFunction()">Projects</a>
+            <a href="#Publications" onclick="myFunction()">Publications</a>
+            <a href="#ResearchProjects" onclick="myFunction()">Research & Technical Projects</a>
+            <a href="#TeachingLeadership" onclick="myFunction()">Teaching & Leadership</a>
+            <a href="#ProfessionalExperience" onclick="myFunction()">Professional Experience</a>
             <a href="#AwardsandScholarships" onclick="myFunction()">Awards and Scholarships</a>
-            <a href="#TechnicalStrengths" onclick="myFunction()">Technical Strengths</a>
-            <a href="#VolunteerExperience" onclick="myFunction()">Volunteer Experience</a>
-            <a href="#Hobbies" onclick="myFunction()">Hobbies</a>
+            <a href="#TechnicalSkills" onclick="myFunction()">Technical Skills</a>
+            <a href="#Service" onclick="myFunction()">Service</a>
         </div>
         <!-- "Hamburger menu" / "Bar icon" to toggle the navigation links -->
         <a href="javascript:void(0);" class="icon" onclick="myFunction()">
@@ -55,15 +55,13 @@
 
         <br>
     
-        <h2 id="ProfessionalProfile">
-        Professional Profile
+        <h2 id="ResearchInterests">
+        Research Interests
         <br>
         </h2>
 
         <p>
-            I am a hardworking and motivated 4th year Computer Science student minoring in MIS.
-            My primary interest is Computer Vision which I plan to perform research for my master's degree.
-            My future ambitions involve obtaining a master's degree specializing in Computer Vision.
+            Computer Vision, Foundation Models, Robustness & Distribution Shift, AI for Healthcare, Low-Resource Generative AI.
         </p>
 
         <h2 id="Education">
@@ -77,137 +75,167 @@
             2022 - Present
         </h4>
         <p>
-            BSc in Computer Science, Honours program (CGPA 4.16) <br>
-            Minor in MIS <br>
-            108/126 Credits
-            <a href="Transcript.pdf">Unnoficial Transcript</a>
-        </p>
-        <h3>
-            RPAS Advanced Operations License - BCIT 
-        </h3>
-        <h4>
-            2024 - Present
-        </h4>
-        <p>
-            Certified for advanced operations
+            BSc in Computer Science, Honours Program <br>
+            Minor in Management Information Systems (MIS) <br>
+            <b>CGPA: 4.16 / 4.33</b> (Pure A+ record in 3rd/4th year coursework)
+            <br>
+            <a href="Transcript.pdf">Unofficial Transcript</a>
         </p>
 
 
-        <h2 id="Research">
-            Research
+        <h2 id="Publications">
+            Publications & Presentations
             <br>
             </h2>
     
     
             <h3>
-                Analysis of a Variable Region Size in Regional Voting #1571147647 <br>
+                Analysis of a Variable Region Size in Regional Voting
             </h3>
             <h4>
-                Paper accepted in 2025 IEEE UIC Conference <br>
-                77 papers accepted with an acceptance rate of 23% <br>
-                I will be presenting this paper in August of 2025
+                August 2025
             </h4>
             <p>
-                As part of my Undergraduate thesis project I wrote with Dr. Liang Chen a paper analyzing the effect of using multiple region sizes in a regional election.
-                This research had me derive formulas to represent the probability that a candidate with a known support rate will win an election given known quanitities of concentrated noise. 
-    
+                <i>Hirt, J. and Chen, L.</i> <br>
+                IEEE 22nd International Conference on Ubiquitous Intelligence and Computing (UIC). <br>
+                (Accepted for Oral Presentation)
             </p>
-        <h2 id="WorkExperience">
-        Work Experience
+            <ul>
+                <li>Independently derived mathematical theorems for election stability under concentrated noise.</li>
+                <li>Designed multi-scale voting ensembles to mitigate spatially correlated data corruption.</li>
+            </ul>
+
+        <h2 id="ResearchProjects">
+        Research & Technical Projects
         <br>
         </h2>
 
-
-
         <h3>
-            University of Northern British Columbia 
+            Generative AI for Indigenous Language Preservation (Dakelh)
         </h3>
         <h4>
-            2025 - Winter Semester & Summer Semester
+            Fall 2025 - Software Engineering Project
         </h4>
-        <p>
-            GTA Position CPSC 127 - Introduction to Technology<br>
-            This position was part of the Tek-x dual credit program between UNBC CNC and School District 57<br>
-            One part of this position was delivering full lectures to the students <br>
-            Lectures were on the topics:
-        </p>
-    
-            <ul>
-        <li> RPAS Legislation</li> 
-        <li>RPAS Applications</li> 
-        <li>Open Source</li>
-    </ul>
-        
-
-        <p>
-            I was responsible for giving timely formative feedback to students, marking assignments and exams <br>
-            Part of this job was teaching students to safely fly drones, including a $25,000 Matrice 350 RTK
-        </p>
-
-
-
+        <ul>
+            <li>Addressed extreme data scarcity for the endangered Dakelh language by engineering a Generative Language Model.</li>
+            <li>Curated a specialized corpus from the Dakelh translation of the New Testament and implemented a custom <b>Byte Pair Encoding (BPE)</b> tokenizer to handle unique morphology.</li>
+            <li>Trained the model using <b>NanoGPT</b> and <b>Hugging Face Transformers</b>, creating a tool to generate synthetic educational text for language revitalization.</li>
+        </ul>
 
         <h3>
-            University of Northern British Columbia 
+            Gamified ASL Fingerspelling System
         </h3>
         <h4>
-            2025 - Winter Semester
+            Fall 2025 - Social Robotics Capstone
         </h4>
-        <p>
-            SA Position CPSC 231 - Computer Architecture<br>
-            The duties of this job was to teach Aarch64 assembly to second year computer science students <br>
-            After the lab I was responsible for marking and giving feedback on student submissions
-        </p>
+        <ul>
+            <li>Architected a computer vision pipeline using <b>MediaPipe</b> and <b>Django</b> to gamify ASL education.</li>
+            <li>Identified failure modes in off-the-shelf models regarding fine-grained alphabet recognition; trained a custom gesture recognizer to achieve high-fidelity classification for all 26 letters.</li>
+            <li>Designed a temporal classification extension using sequential hand landmarks to recognize dynamic gestures (e.g., 'J', 'Z').</li>
+        </ul>
+
+        <h3>
+            Robust Consensus Algorithms (Honours Thesis)
+        </h3>
+        <h4>
+            2024 - Present - Undergraduate Honors Researcher
+        </h4>
+        <ul>
+            <li>Investigated the fragility of consensus algorithms against spatially correlated noise (analogous to sensor artifacts).</li>
+            <li>Numerically evaluated stability formulas to identify the "edge of stability" across diverse noise configurations.</li>
+            <li>Demonstrated that multi-scale regional voting acts as a stabilizing ensemble, reducing error rates compared to fixed-kernel baselines.</li>
+        </ul>
+
+        <h3>
+            Grocery Helper Application
+        </h3>
+        <h4>
+            Winter 2024 - Lead Developer
+        </h4>
+        <ul>
+            <li>Led development of a mobile/web application using <b>Flutter</b> and <b>Firebase</b>.</li>
+            <li>Engineered REST API integrations with TheMealDB and implemented persistent user state management with Google Authentication.</li>
+            <li><a href="flutter/groceryhelper/index.html">Try a Grocery Helper Demo here!</a></li>
+        </ul>
+
+
+        <h2 id="TeachingLeadership">
+        Teaching & Leadership
+        <br>
+        </h2>
+
+        <h3>
+            University of Northern British Columbia
+        </h3>
+        <h4>
+            2024 - Present - Teaching Assistant (Intro to Technology / Computer Architecture)
+        </h4>
+        <ul>
+            <li>Taught aerial data acquisition and <b>photogrammetry pipelines</b> using DJI Matrice 350 RTK drones; instructed students on processing raw visual data into 3D models.</li>
+            <li>Instructed labs on Aarch64 Assembly, GPIO, and Concurrent Programming.</li>
+            <li>Delivered guest lectures and developed curriculum for undergraduate labs.</li>
+        </ul>
+
+        <h3>
+            UNBC Computer Science Club
+        </h3>
+        <h4>
+            2024 - Present - President
+        </h4>
+        <ul>
+            <li>Revived the university's chapter of the <b>ACM Intercollegiate Programming Competition (ICPC)</b>; established training infrastructure for future teams.</li>
+            <li>Organized university-wide coding competitions, increasing student participation by 400%.</li>
+        </ul>
+
+        <h3>
+            UNBC JDC West Team
+        </h3>
+        <h4>
+            2024 - Present - VP Technology
+        </h4>
+        <ul>
+            <li>Led technical strategy for business case competitions; raised funds for the <b>Spirit of the North Healthcare Foundation</b> to purchase medical equipment for rural hospitals.</li>
+        </ul>
 
         <h3>
             Quinson Elementary
         </h3>
         <h4>
-            2025 - Winter Semester
+            Winter 2025 - Volunteer Coding Instructor
         </h4>
-        <p>
-            After School Coding Club Teacher <br>
-            My responsibilities included teaching programming to students Grade 5-7 <br>
-            The language taught was Scratch 3.0
-        </p>
+        <ul>
+            <li>Taught programming logic (loops, conditionals) to grades 4-7 using Scratch; guided students in building clones of Flappy Bird and platformers.</li>
+        </ul>
 
+        <h2 id="ProfessionalExperience">
+        Other Professional Experience
+        <br>
+        </h2>
 
         <h3>
             Crossroads Brewing & Distillery
         </h3>
         <h4>
-            2020 - Present
+            2020 - 2025 - Line Cook
         </h4>
-        <p>
-            I am employed at Crossroads as a line cook <br>
-            The work I perform is in a high pressure, time sensitive environment <br>
-            One of the aspects of the job is prioritizing tasks, whether they are preparing orders for customers, or cleaning and maintenance of the facilities <br>
-        </p>
+        <ul>
+            <li>Maintained high performance in a fast-paced, high-pressure environment while balancing full-time academic studies.</li>
+            <li>Prioritized tasks dynamically to meet fluctuating customer demand; ensured strict adherence to safety and organization standards.</li>
+        </ul>
 
 
-
-        <h2 id="Projects">
-        Projects
+        <h2 id="TechnicalSkills">
+        Technical Skills
         <br>
         </h2>
 
-
-        <h3>
-            Grocery Helper Project
-        </h3>
-        <h4>
-            2024 - Winter Semester
-        </h4>
         <p>
-            As part of CPSC 499 - Tech Entrepreneurship my team created an app called Grocer Helper<br>
-            I served as the lead developer, writing 90% of the code in the project <br>
-            Grocery Helper uses a TikTok style recipe finder <br>
-            You can then schedule the recipe in the calender section <br>
-            You can also use the shopping function to generate a list of all ingredients for recipes in a given date range <br>
-            <a href="flutter/groceryhelper/index.html">Try a Grocery Helper Demo here!</a>
-
+            <b>Computer Languages:</b> <b>Intermediate:</b> Java, Python, Dart, ARM Assembly, Javascript | <b>Beginner:</b> C, C++<br>
+            <b>Frameworks & APIs:</b> <b>Intermediate:</b> Django, Flutter, Firebase | <b>Beginner:</b> REST, Google Authentication, NanoGPT, MediaPipe<br>
+            <b>Database:</b> <b>Intermediate:</b> SQL, Firebase, JSON DB<br>
+            <b>Tools:</b> <b>Advanced:</b> LaTeX | <b>Intermediate:</b> Git, Vim, Microsoft Office 365, Linux (Ubuntu)<br>
+            <b>Operating Systems:</b> <b>Advanced:</b> Windows 7-11 | <b>Intermediate:</b> Ubuntu 18-24
         </p>
-
 
 
         <h2 id="AwardsandScholarships">
@@ -219,129 +247,76 @@
             Awards
         </h3>
         <p>
-            Golden Key Honours Society (Given to students in top 15% of program) <br>
-            Computer Science Entrance Award
+            <b>Golden Key Honours Society</b> (Top 15% of students) - 2022 <br>
+            <b>L.A. Lefebvre and Associates Award</b> (Merit-based, top CS student >90 credits, $1500) - 2025 <br>
+            <b>Computer Science Entrance Award</b> - 2022
         </p>
-
-
 
         <h3>
             Scholarships
         </h3>
-
         <p>
-            District Authority Scholarships (Given to top 5500 BC Highschool Graduates) <br>
-            BC Achievement Scholarship (Given to top 8000 BC Highschool Graduates)
+            <b>BC Achievement Scholarship</b> (Top 8000 graduates) - 2022 <br>
+            <b>District Authority Scholarship</b> (Top 5500 graduates) - 2022
         </p>
 
 
-
-
-
-        <h2 id="TechnicalStrengths">
-        Technical Strengths
+        <h2 id="Service">
+        Service
         <br>
         </h2>
 
-
-        <h3>Computer Languages</h3>
+        <h3>
+            UNBC Senate Representative (FSE)
+        </h3>
+        <h4>
+            2023 - 2025
+        </h4>
         <p>
-    <b>Intermediate</b> Java, Python, Dart, SQL | <b>Beginner</b> ARM, C, C++
-        </p>
-        <h3>Frameworks & APIs</h3>
-        <p>
-            <b>Intermediate</b> Flutter, Firebase | <b>Beginner</b> REST, Google Authentication
-        </p>
-        <h3>Database</h3>
-        <p>
-            <b>Intermediate</b> Transact-SQL, Firebase, JSON DB
+            Represented Faculty of Science and Engineering students; served on committees for Academic Affairs and Awards.
         </p>
 
-        <h3>Tools</h3>
+        <h3>
+            PGSS Esports Coach
+        </h3>
+        <h4>
+            2021 - 2023
+        </h4>
         <p>
-            <b>Advanced</b> LaTeX| <b>Intermediate</b> Git, Vim, Microsoft Office 365
+            Led high school team to win "Best in Western North America" (2022).
         </p>
-        <h3>Operating Systems</h3>
-        <p>
-            <b>Advanced</b> Windows 7-11 | <b>Intermediate</b> Linux
-        </p>
-
-
-
-
-
-        <h2 id="VolunteerExperience">
-        Volunteer Experience
-        <br>
-        </h2>
-
-
-        <h3>Student Senator: Faculty of Science and Engineering</h3>
-
-
-        <h3>Student Representative: Faculty of Science and Engineering</h3>
-
-
-        <h3>UNBC Computer Science Club President</h3>
-
-
-        <h3>PGSS Esports Coach</h3>
-
-
-
-
 
         <h2 id="Hobbies">
-        Hobbies
-        <br>
-        </h2>
-
-        <h3>
-            JDC West
-        </h3>
-        <h4>
-            2024 - Present
-        </h4>
-        <h4>
-            Delegate on Business Technology Team
-        </h4>
-        <p>
-            JDC West is the most prestigious case competition in Western Canada <br>
-            I competed as a Business Technology delegate in the 2025 competition <br>
-            The competition gives teams 3 hours to create a solution to a business case and present it to a panel of judges<br>
-            The 2025 case was on integrating AI solutions into the healthcare industry <br>
-            I was awarded "Rookie of the year" for the UNBC team
-        </p>
-
-
-        <h3>
-            Prince George Tapestry Singers
-        </h3>
-        <h4>
-            2017 - Present
-        </h4>
-        <p>
-            The Prince George Tapestry Singers is a youth community choir in Prince George <br>
-            As a singer in the Tapestry Singers we have received gold standing in the Cantando and Kiwanis music festival <br>
-            <a href="https://pgtapestry.ca/about-us/senior-singers">You can find out more about the PG Tapestry singers here!</a>
-        </p>
-
-
-        <h3>
-            Plaza 400 Toastmasters Club
-        </h3>
-        <h4>
-            2024 - Present
-        </h4>
-        <p>
-            I am a member of the Plaza 400 Toastmasters club <br>
-            Toastmasters is an organization which aims to improve the leadership skills of members <br>
-            Some of the skills that are worked on are public speaking, speeches, and parlimentary procedure<br>
-            <a href="https://plaza400.toastmastersclubs.org/">Here is the club's website</a>
-
-        </p>
-
-
+            Hobbies
+            <br>
+            </h2>
+    
+            <h3>
+                Prince George Tapestry Singers
+            </h3>
+            <h4>
+                2017 - Present
+            </h4>
+            <p>
+                The Prince George Tapestry Singers is a youth community choir in Prince George <br>
+                As a singer in the Tapestry Singers we have received gold standing in the Cantando and Kiwanis music festival <br>
+                <a href="https://pgtapestry.ca/about-us/senior-singers">You can find out more about the PG Tapestry singers here!</a>
+            </p>
+    
+    
+            <h3>
+                Plaza 400 Toastmasters Club
+            </h3>
+            <h4>
+                2024 - Present
+            </h4>
+            <p>
+                I am a member of the Plaza 400 Toastmasters club <br>
+                Toastmasters is an organization which aims to improve the leadership skills of members <br>
+                Some of the skills that are worked on are public speaking, speeches, and parlimentary procedure<br>
+                <a href="https://plaza400.toastmastersclubs.org/">Here is the club's website</a>
+    
+            </p>
 
         </div>
     </body>
