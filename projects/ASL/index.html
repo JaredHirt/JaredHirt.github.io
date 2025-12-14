@@ -65,24 +65,33 @@
             font-size: 1.5rem;
         }
 
+        /* --- VIDEO CONTAINER FIX --- */
         .video-container {
             position: relative;
             width: 640px;
-            height: 480px;
+            max-width: 90vw;
+            /* Height is now determined by the video inside */
             background: #000;
             border-radius: 15px;
             overflow: hidden;
             border: 5px solid #fff;
+            display: flex;       /* Removes gap at bottom of video */
         }
 
-        /* Mirror the video so it feels natural */
-        video, canvas {
-            position: absolute;
+        video {
+            display: block;      /* Makes it behave like a box */
+            width: 100%;         /* Fill width of container */
+            height: auto;        /* Maintain aspect ratio */
+            transform: scaleX(-1); /* Mirror effect */
+        }
+
+        canvas {
+            position: absolute;  /* Pins it over the video */
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            transform: scaleX(-1); 
+            transform: scaleX(-1); /* Mirror canvas to match video */
         }
 
         .game-controls {
@@ -173,11 +182,26 @@
         } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/vision_bundle.js";
         
         // --- CONFIGURATION ---
-        const GAME_DURATION = 240; 
+        const GAME_DURATION = 240; // 4 minutes
         const ASSETS_PATH = "./assets/"; 
-        // IMPORTANT: Ensure these files exist in your assets folder!
         const WASM_PATH = "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm";
         const MODEL_PATH = ASSETS_PATH + "models/asl_recognizer.task"; 
+
+        // --- WORD POOL (NO DOUBLE LETTERS) ---
+        // These words have no adjacent identical letters (e.g. no "HELLO" or "APPLE")
+        const BASE_WORD_POOL = [
+            "WORLD", "SIGN", "GAME", "CODE", "HAND", "FAST", "BLUE", "PINK", "GREY", 
+            "CAT", "DOG", "BIRD", "FISH", "HELP", "LOVE", "WORK", "PLAY", "LIVE", 
+            "HAVE", "JUMP", "WALK", "READ", "MATH", "TIME", "YEAR", "DAY", "NIGHT", 
+            "BODY", "FACE", "MOUTH", "NOSE", "ARM", "LEG", "KING", "DUKE", "LION", 
+            "TIGER", "BEAR", "WOLF", "FOX", "CORN", "RICE", "BEAN", "FRUIT", "GRAPE", 
+            "PLUM", "LEMON", "MELON", "WATER", "DRINK", "MILK", "JUICE", "SODA", 
+            "TABLE", "CHAIR", "DESK", "HOUSE", "HOME", "PLANET", "SPACE", "STAR", 
+            "MARS", "EARTH", "WIND", "FIRE", "GOLD", "SILVER", "BLACK", "WHITE",
+            "ORANGE", "PURPLE", "BROWN", "SHIRT", "PANTS", "SHOE", "SOCK", "HAT",
+            "GLOVE", "COAT", "RAIN", "SNOW", "STORM", "CLOUD", "ROAD", "CAR", "BUS",
+            "TRAIN", "BOAT", "SHIP", "PLANE", "BIKE", "CITY", "TOWN", "FARM", "PARK"
+        ];
 
         // --- GLOBAL STATE ---
         let gestureRecognizer;
@@ -190,7 +214,7 @@
             score: 0,
             timeLeft: GAME_DURATION,
             playerName: "Player 1",
-            words: ["HELLO", "WORLD", "CODE", "SIGN", "GAME"], // Edit these!
+            words: [], // Will be filled on init
             currentWordIndex: 0,
             currentLetterIndex: 0
         };
@@ -206,6 +230,21 @@
         const canvasCtx = canvasElement.getContext("2d");
         const drawingUtils = new DrawingUtils(canvasCtx);
 
+        // --- HELPER: GENERATE 600 WORDS ---
+        function generateWordList() {
+            let hugeList = [];
+            // Repeat the base pool until we have at least 600 words
+            while (hugeList.length < 600) {
+                hugeList = hugeList.concat(BASE_WORD_POOL);
+            }
+            // Shuffle the array (Fisher-Yates Shuffle)
+            for (let i = hugeList.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [hugeList[i], hugeList[j]] = [hugeList[j], hugeList[i]];
+            }
+            return hugeList.slice(0, 600); // Trim to exactly 600
+        }
+
         // --- 1. INITIALIZATION ---
         async function createGestureRecognizer() {
             try {
@@ -217,10 +256,9 @@
                     },
                     cannedGesturesClassifierOptions: { scoreThreshold: 0.5 },
                     runningMode: runningMode,
-                    numHands: 1 // Single player = 1 hand needed
+                    numHands: 1 
                 });
                 
-                // Enable Start Button
                 document.getElementById('loading-status').textContent = "Model Loaded!";
                 const btn = document.getElementById('btn-start-game');
                 btn.disabled = false;
@@ -247,13 +285,14 @@
             state.timeLeft = GAME_DURATION;
             state.currentWordIndex = 0;
             state.currentLetterIndex = 0;
+            state.words = generateWordList(); // Generate the 600 words here
+            
             isPlaying = true;
             
             switchScreen('screen-game');
             updateWordDisplay();
             enableCam(); 
 
-            // Timer
             if (timerInterval) clearInterval(timerInterval);
             timerInterval = setInterval(() => {
                 state.timeLeft--;
@@ -285,7 +324,6 @@
             const word = state.words[state.currentWordIndex];
             const targetLetter = word[state.currentLetterIndex];
             
-            // Build visual word
             let html = "";
             for(let i=0; i<word.length; i++) {
                 if(i < state.currentLetterIndex) html += `<span style="color:#4CAF50">${word[i]}</span> `;
@@ -296,8 +334,8 @@
             document.getElementById('current-letter-display').textContent = targetLetter;
             document.getElementById('score-display').textContent = `Score: ${state.score}`;
             
-            // Update Image
-            document.getElementById('hint-img').src = `${ASSETS_PATH}images/signs/${targetLetter}.jpg`;
+            // Lowercase conversion for image path
+            document.getElementById('hint-img').src = `${ASSETS_PATH}images/signs/${targetLetter.toLowerCase()}.jpg`;
         }
 
         function checkGesture(detectedLetter) {
@@ -307,14 +345,10 @@
             const target = word[state.currentLetterIndex];
 
             if(detectedLetter.toUpperCase() === target) {
-                // Correct!
                 console.log("Correct!", detectedLetter);
                 state.currentLetterIndex++;
                 state.score += 10;
                 
-                // Play sound (Optional - add your sound logic here)
-                // new Audio(ASSETS_PATH + 'sounds/game/correct.wav').play();
-
                 if(state.currentLetterIndex >= word.length) {
                     state.score += 50;
                     state.currentWordIndex++;
@@ -346,46 +380,40 @@
         }
 
         async function predictWebcam() {
-            if(!isPlaying) return; // Stop loop if game ended
+            if(!isPlaying) return; 
 
             // Resize canvas to match video
             canvasElement.width = video.videoWidth;
             canvasElement.height = video.videoHeight;
 
-            // Draw Webcam Feed
             canvasCtx.save();
             canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
-            // Draw regular image (mirroring is handled by CSS)
             canvasCtx.drawImage(video, 0, 0, canvasElement.width, canvasElement.height);
             canvasCtx.restore();
 
             let startTimeMs = performance.now();
             if (lastVideoTime !== video.currentTime) {
                 lastVideoTime = video.currentTime;
-                // Detect
+                
                 const results = gestureRecognizer.recognizeForVideo(video, startTimeMs);
 
-                // Draw Landmarks
                 if (results.landmarks) {
                     for (const landmarks of results.landmarks) {
                         drawingUtils.drawConnectors(landmarks, GestureRecognizer.HAND_CONNECTIONS, { color: "#00FF00", lineWidth: 5 });
                     }
                 }
 
-                // Check Gesture
                 if (results.gestures.length > 0) {
                     const topGesture = results.gestures[0][0].categoryName;
                     if(ASL_GESTURES.has(topGesture)) {
                         
-                        // Draw Gesture Text
                         canvasCtx.save();
-                        canvasCtx.scale(-1, 1); // Flip text back so it's readable
+                        canvasCtx.scale(-1, 1); 
                         canvasCtx.fillStyle = "white";
                         canvasCtx.font = "bold 40px Arial";
-                        canvasCtx.fillText(topGesture, -100, 50); // Draw at top right
+                        canvasCtx.fillText(topGesture, -100, 50); 
                         canvasCtx.restore();
 
-                        // Logic Check
                         checkGesture(topGesture); 
                     }
                 }
@@ -393,7 +421,6 @@
             window.requestAnimationFrame(predictWebcam);
         }
 
-        // Start loading immediately
         createGestureRecognizer();
     </script>
 </body>
