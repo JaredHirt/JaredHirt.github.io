@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speedy Signers - Single Player Demo</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+    
+    <style>
+        /* --- CSS STYLES --- */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: "Nunito", sans-serif;
+            background-color: #f0f0f0;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        /* Screen Management */
+        .screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            position: absolute;
+            top: 0;
+            left: 0;
+            background: white; 
+            transition: opacity 0.5s;
+        }
+        
+        .screen.active { display: flex; }
+
+        /* Start Screen */
+        #screen-start { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        #screen-start h1 { font-size: 5rem; margin-bottom: 0.5rem; }
+        
+        /* Rules Screen */
+        .dialogue-box {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            max-width: 600px;
+        }
+        input { padding: 10px; font-size: 1.2rem; border-radius: 5px; border: 1px solid #ccc; }
+        
+        /* Game Screen */
+        #screen-game { background: #222; color: white; justify-content: flex-start; }
+        
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            width: 90%;
+            padding: 20px;
+            font-size: 1.5rem;
+        }
+
+        .video-container {
+            position: relative;
+            width: 640px;
+            height: 480px;
+            background: #000;
+            border-radius: 15px;
+            overflow: hidden;
+            border: 5px solid #fff;
+        }
+
+        /* Mirror the video so it feels natural */
+        video, canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            transform: scaleX(-1); 
+        }
+
+        .game-controls {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            width: 80%;
+            background: #333;
+            padding: 20px;
+            border-radius: 15px;
+        }
+
+        #target-word-display { font-size: 3rem; letter-spacing: 10px; font-weight: 900; color: #FFD700; }
+        .hint-container { display: flex; align-items: center; gap: 20px; }
+        .hint-image { height: 150px; border-radius: 10px; border: 2px solid white; }
+
+        button {
+            background: #764ba2;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.5rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+        button:hover { transform: scale(1.05); }
+    </style>
+</head>
+<body>
+
+    <div id="screen-start" class="screen active">
+        <h1>Speedy Signers</h1>
+        <p style="font-size: 2rem;">Single Player Demo</p>
+        <p id="loading-status" style="font-size: 1rem; color: #ccc;">Loading AI Model...</p>
+        <br>
+        <button id="btn-start-game" disabled onclick="switchScreen('screen-rules')">Loading...</button>
+    </div>
+
+    <div id="screen-rules" class="screen">
+        <div class="dialogue-box">
+            <h1>Rules</h1>
+            <p>Spell the words using ASL. Race against the clock!</p>
+            <input id="player-name" type="text" placeholder="Enter Name" value="Player 1">
+            <br><br>
+            <button onclick="initGame()">GO!</button>
+        </div>
+    </div>
+
+    <div id="screen-game" class="screen">
+        <div class="game-header">
+            <div id="player-display">Player 1</div>
+            <div id="timer-display" style="font-size: 2.5rem; font-weight: bold;">04:00</div>
+            <div id="score-display">Score: 0</div>
+        </div>
+
+        <div class="video-container">
+            <video id="webcam" autoplay playsinline></video>
+            <canvas id="output_canvas"></canvas>
+        </div>
+
+        <div class="game-controls">
+            <div id="target-word-display">LOADING...</div>
+            <div class="hint-container">
+                <img id="hint-img" class="hint-image" src="" alt="Sign Hint">
+                <div>
+                    <h2 id="current-letter-display" style="font-size: 3rem; margin: 0; color: #4CAF50;">-</h2>
+                </div>
+            </div>
+            <button onclick="skipWord()">Skip Word (-50 pts)</button>
+        </div>
+    </div>
+
+    <div id="screen-summary" class="screen">
+        <h1>Good Game!</h1>
+        <h2 id="final-player-name"></h2>
+        <p style="font-size: 2rem;">Final Score: <span id="final-score" style="color: purple;">0</span></p>
+        <button onclick="location.reload()">Play Again</button>
+    </div>
+
+    <script type="module">
+        import {
+            GestureRecognizer,
+            FilesetResolver,
+            DrawingUtils
+        } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/vision_bundle.js";
+        
+        // --- CONFIGURATION ---
+        const GAME_DURATION = 240; 
+        const ASSETS_PATH = "./assets/"; 
+        // IMPORTANT: Ensure these files exist in your assets folder!
+        const WASM_PATH = "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm";
+        const MODEL_PATH = ASSETS_PATH + "models/asl_recognizer.task"; 
+
+        // --- GLOBAL STATE ---
+        let gestureRecognizer;
+        let runningMode = "VIDEO";
+        let lastVideoTime = -1;
+        let isPlaying = false;
+        let timerInterval;
+        
+        let state = {
+            score: 0,
+            timeLeft: GAME_DURATION,
+            playerName: "Player 1",
+            words: ["HELLO", "WORLD", "CODE", "SIGN", "GAME"], // Edit these!
+            currentWordIndex: 0,
+            currentLetterIndex: 0
+        };
+
+        const ASL_GESTURES = new Set([
+            'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O',
+            'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'
+        ]);
+
+        // --- DOM ELEMENTS ---
+        const video = document.getElementById("webcam");
+        const canvasElement = document.getElementById("output_canvas");
+        const canvasCtx = canvasElement.getContext("2d");
+        const drawingUtils = new DrawingUtils(canvasCtx);
+
+        // --- 1. INITIALIZATION ---
+        async function createGestureRecognizer() {
+            try {
+                const vision = await FilesetResolver.forVisionTasks(WASM_PATH);
+                gestureRecognizer = await GestureRecognizer.createFromOptions(vision, {
+                    baseOptions: {
+                        modelAssetPath: MODEL_PATH,
+                        delegate: "CPU"
+                    },
+                    cannedGesturesClassifierOptions: { scoreThreshold: 0.5 },
+                    runningMode: runningMode,
+                    numHands: 1 // Single player = 1 hand needed
+                });
+                
+                // Enable Start Button
+                document.getElementById('loading-status').textContent = "Model Loaded!";
+                const btn = document.getElementById('btn-start-game');
+                btn.disabled = false;
+                btn.textContent = "Start Game";
+                console.log("GestureRecognizer created!");
+            } catch (e) {
+                alert("Error loading model: " + e.message);
+                console.error(e);
+            }
+        }
+
+        // --- 2. GAME LOGIC ---
+        window.switchScreen = (screenId) => {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        };
+
+        window.initGame = () => {
+            state.playerName = document.getElementById('player-name').value || "Player 1";
+            document.getElementById('player-display').textContent = state.playerName;
+            
+            // Reset
+            state.score = 0;
+            state.timeLeft = GAME_DURATION;
+            state.currentWordIndex = 0;
+            state.currentLetterIndex = 0;
+            isPlaying = true;
+            
+            switchScreen('screen-game');
+            updateWordDisplay();
+            enableCam(); 
+
+            // Timer
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                state.timeLeft--;
+                updateTimerUI();
+                if(state.timeLeft <= 0) endGame();
+            }, 1000);
+        };
+
+        window.skipWord = () => {
+            state.score = Math.max(0, state.score - 50);
+            state.currentWordIndex++;
+            state.currentLetterIndex = 0;
+            updateWordDisplay();
+        };
+
+        function updateTimerUI() {
+            const m = Math.floor(state.timeLeft / 60).toString().padStart(2, '0');
+            const s = (state.timeLeft % 60).toString().padStart(2, '0');
+            const el = document.getElementById('timer-display');
+            el.textContent = `${m}:${s}`;
+            if(state.timeLeft < 30) el.style.color = "red";
+        }
+
+        function updateWordDisplay() {
+            if(state.currentWordIndex >= state.words.length) {
+                endGame();
+                return;
+            }
+            const word = state.words[state.currentWordIndex];
+            const targetLetter = word[state.currentLetterIndex];
+            
+            // Build visual word
+            let html = "";
+            for(let i=0; i<word.length; i++) {
+                if(i < state.currentLetterIndex) html += `<span style="color:#4CAF50">${word[i]}</span> `;
+                else if (i === state.currentLetterIndex) html += `<span style="text-decoration:underline; color:#FFD700">${word[i]}</span> `;
+                else html += `_ `;
+            }
+            document.getElementById('target-word-display').innerHTML = html;
+            document.getElementById('current-letter-display').textContent = targetLetter;
+            document.getElementById('score-display').textContent = `Score: ${state.score}`;
+            
+            // Update Image
+            document.getElementById('hint-img').src = `${ASSETS_PATH}images/signs/${targetLetter}.jpg`;
+        }
+
+        function checkGesture(detectedLetter) {
+            if(!isPlaying) return;
+            
+            const word = state.words[state.currentWordIndex];
+            const target = word[state.currentLetterIndex];
+
+            if(detectedLetter.toUpperCase() === target) {
+                // Correct!
+                console.log("Correct!", detectedLetter);
+                state.currentLetterIndex++;
+                state.score += 10;
+                
+                // Play sound (Optional - add your sound logic here)
+                // new Audio(ASSETS_PATH + 'sounds/game/correct.wav').play();
+
+                if(state.currentLetterIndex >= word.length) {
+                    state.score += 50;
+                    state.currentWordIndex++;
+                    state.currentLetterIndex = 0;
+                }
+                updateWordDisplay();
+            }
+        }
+
+        function endGame() {
+            isPlaying = false;
+            clearInterval(timerInterval);
+            switchScreen('screen-summary');
+            document.getElementById('final-player-name').textContent = state.playerName;
+            document.getElementById('final-score').textContent = state.score;
+        }
+
+        // --- 3. MEDIAPIPE LOOP ---
+        async function enableCam() {
+            if (!gestureRecognizer) return;
+            const constraints = { video: true };
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia(constraints);
+                video.srcObject = stream;
+                video.addEventListener("loadeddata", predictWebcam);
+            } catch(e) {
+                console.error("Webcam blocked", e);
+            }
+        }
+
+        async function predictWebcam() {
+            if(!isPlaying) return; // Stop loop if game ended
+
+            // Resize canvas to match video
+            canvasElement.width = video.videoWidth;
+            canvasElement.height = video.videoHeight;
+
+            // Draw Webcam Feed
+            canvasCtx.save();
+            canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+            // Draw regular image (mirroring is handled by CSS)
+            canvasCtx.drawImage(video, 0, 0, canvasElement.width, canvasElement.height);
+            canvasCtx.restore();
+
+            let startTimeMs = performance.now();
+            if (lastVideoTime !== video.currentTime) {
+                lastVideoTime = video.currentTime;
+                // Detect
+                const results = gestureRecognizer.recognizeForVideo(video, startTimeMs);
+
+                // Draw Landmarks
+                if (results.landmarks) {
+                    for (const landmarks of results.landmarks) {
+                        drawingUtils.drawConnectors(landmarks, GestureRecognizer.HAND_CONNECTIONS, { color: "#00FF00", lineWidth: 5 });
+                    }
+                }
+
+                // Check Gesture
+                if (results.gestures.length > 0) {
+                    const topGesture = results.gestures[0][0].categoryName;
+                    if(ASL_GESTURES.has(topGesture)) {
+                        
+                        // Draw Gesture Text
+                        canvasCtx.save();
+                        canvasCtx.scale(-1, 1); // Flip text back so it's readable
+                        canvasCtx.fillStyle = "white";
+                        canvasCtx.font = "bold 40px Arial";
+                        canvasCtx.fillText(topGesture, -100, 50); // Draw at top right
+                        canvasCtx.restore();
+
+                        // Logic Check
+                        checkGesture(topGesture); 
+                    }
+                }
+            }
+            window.requestAnimationFrame(predictWebcam);
+        }
+
+        // Start loading immediately
+        createGestureRecognizer();
+    </script>
+</body>
+</html>
