@@ -473,12 +473,14 @@
         }
 
         async function predictWebcam() {
-            // Note: We run this loop even during countdown so user can see themselves
-            // But 'checkGesture' is blocked by isPlaying flag
+            // Run loop even if game isn't playing so user can see themselves
             
+            // FIX: Only resize canvas if the video dimensions have actually changed
             if (video.videoWidth > 0 && video.videoHeight > 0) {
-                canvasElement.width = video.videoWidth;
-                canvasElement.height = video.videoHeight;
+                if (canvasElement.width !== video.videoWidth || canvasElement.height !== video.videoHeight) {
+                    canvasElement.width = video.videoWidth;
+                    canvasElement.height = video.videoHeight;
+                }
             }
 
             canvasCtx.save();
