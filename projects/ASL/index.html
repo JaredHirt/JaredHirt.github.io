@@ -65,37 +65,49 @@
             font-size: 1.5rem;
         }
 
-        /* --- VIDEO CONTAINER FIX --- */
+        /* --- FIXED CAMERA LAYOUT --- */
+        .video-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            flex-grow: 1; /* Take up remaining vertical space */
+            padding: 10px;
+            box-sizing: border-box;
+        }
+
         .video-container {
             position: relative;
-            width: 640px;
-            max-width: 90vw;
-            /* Height is now determined by the video inside */
-            background: #000;
+            /* Remove fixed width/height. Let video dictate size. */
+            width: auto;
+            height: auto;
             border-radius: 15px;
             overflow: hidden;
             border: 5px solid #fff;
-            display: flex;       /* Removes gap at bottom of video */
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            display: inline-block; /* Shrink to fit content */
+            line-height: 0; /* Remove ghost spacing */
         }
 
         video {
-            display: block;      /* Makes it behave like a box */
-            width: 100%;         /* Fill width of container */
-            height: auto;        /* Maintain aspect ratio */
-            transform: scaleX(-1); /* Mirror effect */
+            display: block;
+            max-width: 80vw;  /* Don't go wider than screen */
+            max-height: 60vh; /* Don't cover the buttons */
+            height: auto;
+            width: auto;
+            transform: scaleX(-1); /* Mirror */
         }
 
         canvas {
-            position: absolute;  /* Pins it over the video */
+            position: absolute;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
-            transform: scaleX(-1); /* Mirror canvas to match video */
+            width: 100% !important;
+            height: 100% !important;
+            transform: scaleX(-1); 
         }
 
         .game-controls {
-            margin-top: 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -103,12 +115,13 @@
             width: 80%;
             background: #333;
             padding: 20px;
-            border-radius: 15px;
+            border-radius: 15px 15px 0 0; /* Rounded top only */
+            margin-bottom: 0;
         }
 
         #target-word-display { font-size: 3rem; letter-spacing: 10px; font-weight: 900; color: #FFD700; }
         .hint-container { display: flex; align-items: center; gap: 20px; }
-        .hint-image { height: 150px; border-radius: 10px; border: 2px solid white; }
+        .hint-image { height: 120px; border-radius: 10px; border: 2px solid white; }
 
         button {
             background: #764ba2;
@@ -150,9 +163,11 @@
             <div id="score-display">Score: 0</div>
         </div>
 
-        <div class="video-container">
-            <video id="webcam" autoplay playsinline></video>
-            <canvas id="output_canvas"></canvas>
+        <div class="video-wrapper">
+            <div class="video-container">
+                <video id="webcam" autoplay playsinline></video>
+                <canvas id="output_canvas"></canvas>
+            </div>
         </div>
 
         <div class="game-controls">
@@ -182,13 +197,12 @@
         } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/vision_bundle.js";
         
         // --- CONFIGURATION ---
-        const GAME_DURATION = 240; // 4 minutes
+        const GAME_DURATION = 240; 
         const ASSETS_PATH = "./assets/"; 
         const WASM_PATH = "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm";
         const MODEL_PATH = ASSETS_PATH + "models/asl_recognizer.task"; 
 
-        // --- WORD POOL (NO DOUBLE LETTERS) ---
-        // These words have no adjacent identical letters (e.g. no "HELLO" or "APPLE")
+        // --- WORD POOL (No Double Letters) ---
         const BASE_WORD_POOL = [
             "WORLD", "SIGN", "GAME", "CODE", "HAND", "FAST", "BLUE", "PINK", "GREY", 
             "CAT", "DOG", "BIRD", "FISH", "HELP", "LOVE", "WORK", "PLAY", "LIVE", 
@@ -203,6 +217,17 @@
             "TRAIN", "BOAT", "SHIP", "PLANE", "BIKE", "CITY", "TOWN", "FARM", "PARK"
         ];
 
+        // --- AUDIO SYSTEM ---
+        const sounds = {
+            music: new Audio(ASSETS_PATH + 'sounds/game/music.wav'),
+            correct: new Audio(ASSETS_PATH + 'sounds/game/correct.wav'),
+            skip: new Audio(ASSETS_PATH + 'sounds/game/skip.wav'),
+            victory: new Audio(ASSETS_PATH + 'sounds/game/victory.wav'),
+            countoff: new Audio(ASSETS_PATH + 'sounds/game/countoff.wav')
+        };
+        sounds.music.loop = true;
+        sounds.music.volume = 0.5;
+
         // --- GLOBAL STATE ---
         let gestureRecognizer;
         let runningMode = "VIDEO";
@@ -214,7 +239,7 @@
             score: 0,
             timeLeft: GAME_DURATION,
             playerName: "Player 1",
-            words: [], // Will be filled on init
+            words: [],
             currentWordIndex: 0,
             currentLetterIndex: 0
         };
@@ -224,7 +249,6 @@
             'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'
         ]);
 
-        // --- DOM ELEMENTS ---
         const video = document.getElementById("webcam");
         const canvasElement = document.getElementById("output_canvas");
         const canvasCtx = canvasElement.getContext("2d");
@@ -233,16 +257,14 @@
         // --- HELPER: GENERATE 600 WORDS ---
         function generateWordList() {
             let hugeList = [];
-            // Repeat the base pool until we have at least 600 words
             while (hugeList.length < 600) {
                 hugeList = hugeList.concat(BASE_WORD_POOL);
             }
-            // Shuffle the array (Fisher-Yates Shuffle)
             for (let i = hugeList.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [hugeList[i], hugeList[j]] = [hugeList[j], hugeList[i]];
             }
-            return hugeList.slice(0, 600); // Trim to exactly 600
+            return hugeList.slice(0, 600);
         }
 
         // --- 1. INITIALIZATION ---
@@ -263,7 +285,6 @@
                 const btn = document.getElementById('btn-start-game');
                 btn.disabled = false;
                 btn.textContent = "Start Game";
-                console.log("GestureRecognizer created!");
             } catch (e) {
                 alert("Error loading model: " + e.message);
                 console.error(e);
@@ -277,15 +298,18 @@
         };
 
         window.initGame = () => {
+            // Start Audio (Must happen on user interaction)
+            sounds.countoff.play();
+            setTimeout(() => sounds.music.play(), 1000);
+
             state.playerName = document.getElementById('player-name').value || "Player 1";
             document.getElementById('player-display').textContent = state.playerName;
             
-            // Reset
             state.score = 0;
             state.timeLeft = GAME_DURATION;
             state.currentWordIndex = 0;
             state.currentLetterIndex = 0;
-            state.words = generateWordList(); // Generate the 600 words here
+            state.words = generateWordList();
             
             isPlaying = true;
             
@@ -302,6 +326,7 @@
         };
 
         window.skipWord = () => {
+            sounds.skip.play(); // Play Skip Sound
             state.score = Math.max(0, state.score - 50);
             state.currentWordIndex++;
             state.currentLetterIndex = 0;
@@ -334,7 +359,6 @@
             document.getElementById('current-letter-display').textContent = targetLetter;
             document.getElementById('score-display').textContent = `Score: ${state.score}`;
             
-            // Lowercase conversion for image path
             document.getElementById('hint-img').src = `${ASSETS_PATH}images/signs/${targetLetter.toLowerCase()}.jpg`;
         }
 
@@ -345,7 +369,9 @@
             const target = word[state.currentLetterIndex];
 
             if(detectedLetter.toUpperCase() === target) {
-                console.log("Correct!", detectedLetter);
+                sounds.correct.currentTime = 0; // Reset sound so it can rapid fire
+                sounds.correct.play(); // Play Correct Sound
+
                 state.currentLetterIndex++;
                 state.score += 10;
                 
@@ -360,6 +386,10 @@
 
         function endGame() {
             isPlaying = false;
+            sounds.music.pause();
+            sounds.music.currentTime = 0;
+            sounds.victory.play(); // Play Victory Sound
+
             clearInterval(timerInterval);
             switchScreen('screen-summary');
             document.getElementById('final-player-name').textContent = state.playerName;
@@ -382,9 +412,11 @@
         async function predictWebcam() {
             if(!isPlaying) return; 
 
-            // Resize canvas to match video
-            canvasElement.width = video.videoWidth;
-            canvasElement.height = video.videoHeight;
+            // Resizing Logic: Match canvas to video's actual size
+            if (video.videoWidth > 0 && video.videoHeight > 0) {
+                canvasElement.width = video.videoWidth;
+                canvasElement.height = video.videoHeight;
+            }
 
             canvasCtx.save();
             canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
