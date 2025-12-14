@@ -15,9 +15,9 @@
             font-family: "Nunito", sans-serif;
             background-color: #f0f0f0;
             overflow: hidden;
+            /* Flex Column: Header Top, Controls Bottom, Video Fills Middle */
             display: flex;
-            justify-content: center;
-            align-items: center;
+            flex-direction: column;
             height: 100vh;
             width: 100vw;
         }
@@ -30,12 +30,12 @@
             justify-content: center;
             width: 100%;
             height: 100%;
-            text-align: center;
             position: absolute;
             top: 0;
             left: 0;
             background: white; 
             transition: opacity 0.5s;
+            z-index: 10;
         }
         
         .screen.active { display: flex; }
@@ -51,50 +51,60 @@
             border-radius: 20px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.1);
             max-width: 600px;
+            text-align: center;
         }
         input { padding: 10px; font-size: 1.2rem; border-radius: 5px; border: 1px solid #ccc; }
         
-        /* Game Screen */
-        #screen-game { background: #222; color: white; justify-content: flex-start; }
-        
+        /* --- GAME SCREEN LAYOUT (FIXED) --- */
+        #screen-game { 
+            background: #222; 
+            color: white; 
+            position: relative; 
+            z-index: 1; /* Behind other screens */
+            display: none; /* Controlled via JS */
+            flex-direction: column;
+            justify-content: space-between; /* Push header up, controls down */
+            height: 100%;
+        }
+
+        /* 1. Header (Fixed Height) */
         .game-header {
             display: flex;
             justify-content: space-between;
             width: 90%;
-            padding: 20px;
+            padding: 15px 20px;
             font-size: 1.5rem;
+            flex-shrink: 0; /* Never shrink */
         }
 
-        /* --- FIXED CAMERA LAYOUT --- */
+        /* 2. Video Wrapper (Fills remaining space) */
         .video-wrapper {
+            flex: 1; /* Grow to fill space */
             display: flex;
             justify-content: center;
             align-items: center;
-            width: 100%;
-            flex-grow: 1; /* Take up remaining vertical space */
+            min-height: 0; /* Crucial for flex scrolling override */
             padding: 10px;
-            box-sizing: border-box;
+            width: 100%;
         }
 
         .video-container {
             position: relative;
-            /* Remove fixed width/height. Let video dictate size. */
-            width: auto;
-            height: auto;
+            /* Constrain by BOTH width and height so it never overflows */
+            max-width: 100%;
+            max-height: 100%; 
+            aspect-ratio: 16/9; /* Enforce standard webcam ratio if possible */
             border-radius: 15px;
             overflow: hidden;
-            border: 5px solid #fff;
+            border: 4px solid #fff;
             box-shadow: 0 0 20px rgba(0,0,0,0.5);
-            display: inline-block; /* Shrink to fit content */
-            line-height: 0; /* Remove ghost spacing */
+            background: #000;
         }
 
         video {
-            display: block;
-            max-width: 80vw;  /* Don't go wider than screen */
-            max-height: 60vh; /* Don't cover the buttons */
-            height: auto;
-            width: auto;
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* Fill the box */
             transform: scaleX(-1); /* Mirror */
         }
 
@@ -102,41 +112,60 @@
             position: absolute;
             top: 0;
             left: 0;
-            width: 100% !important;
-            height: 100% !important;
+            width: 100%;
+            height: 100%;
             transform: scaleX(-1); 
         }
 
+        /* 3. Controls (Fixed Height at Bottom) */
         .game-controls {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 15px;
-            width: 80%;
+            gap: 10px;
+            width: 100%;
             background: #333;
-            padding: 20px;
-            border-radius: 15px 15px 0 0; /* Rounded top only */
-            margin-bottom: 0;
+            padding: 15px 0 25px 0; /* Extra padding at bottom */
+            border-radius: 15px 15px 0 0;
+            flex-shrink: 0; /* Never shrink */
+            z-index: 5;
         }
 
-        #target-word-display { font-size: 3rem; letter-spacing: 10px; font-weight: 900; color: #FFD700; }
+        #target-word-display { font-size: 2.5rem; letter-spacing: 5px; font-weight: 900; color: #FFD700; margin: 0;}
         .hint-container { display: flex; align-items: center; gap: 20px; }
-        .hint-image { height: 120px; border-radius: 10px; border: 2px solid white; }
+        .hint-image { height: 100px; border-radius: 10px; border: 2px solid white; background: #fff;}
 
         button {
             background: #764ba2;
             color: white;
             border: none;
-            padding: 15px 30px;
-            font-size: 1.5rem;
+            padding: 10px 25px;
+            font-size: 1.2rem;
             border-radius: 50px;
             cursor: pointer;
             transition: transform 0.1s;
         }
         button:hover { transform: scale(1.05); }
+
+        /* Countdown Overlay */
+        #countdown-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            font-size: 10rem;
+            font-weight: 900;
+            color: #fff;
+            z-index: 100;
+            pointer-events: none;
+        }
     </style>
 </head>
 <body>
+
+    <div id="countdown-overlay">3</div>
 
     <div id="screen-start" class="screen active">
         <h1>Speedy Signers</h1>
@@ -152,12 +181,11 @@
             <p>Spell the words using ASL. Race against the clock!</p>
             <input id="player-name" type="text" placeholder="Enter Name" value="Player 1">
             <br><br>
-            <button onclick="initGame()">GO!</button>
+            <button onclick="startCountdownSequence()">GO!</button>
         </div>
     </div>
 
-    <div id="screen-game" class="screen">
-        <div class="game-header">
+    <div id="screen-game" class="screen"> <div class="game-header">
             <div id="player-display">Player 1</div>
             <div id="timer-display" style="font-size: 2.5rem; font-weight: bold;">04:00</div>
             <div id="score-display">Score: 0</div>
@@ -171,11 +199,10 @@
         </div>
 
         <div class="game-controls">
-            <div id="target-word-display">LOADING...</div>
+            <div id="target-word-display">GET READY</div>
             <div class="hint-container">
-                <img id="hint-img" class="hint-image" src="" alt="Sign Hint">
-                <div>
-                    <h2 id="current-letter-display" style="font-size: 3rem; margin: 0; color: #4CAF50;">-</h2>
+                <img id="hint-img" class="hint-image" src="" alt="Sign Hint" style="opacity: 0;"> <div>
+                    <h2 id="current-letter-display" style="font-size: 3rem; margin: 0; color: #4CAF50;"></h2>
                 </div>
             </div>
             <button onclick="skipWord()">Skip Word (-50 pts)</button>
@@ -232,7 +259,7 @@
         let gestureRecognizer;
         let runningMode = "VIDEO";
         let lastVideoTime = -1;
-        let isPlaying = false;
+        let isPlaying = false; // Is the GAMEPLAY active?
         let timerInterval;
         
         let state = {
@@ -294,28 +321,59 @@
         // --- 2. GAME LOGIC ---
         window.switchScreen = (screenId) => {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById(screenId).classList.add('active');
+            // Special handling for game screen which has its own display logic
+            if(screenId === 'screen-game') {
+                document.getElementById(screenId).style.display = 'flex';
+            } else {
+                document.getElementById(screenId).classList.add('active');
+            }
         };
 
-        window.initGame = () => {
-            // Start Audio (Must happen on user interaction)
-            sounds.countoff.play();
-            setTimeout(() => sounds.music.play(), 1000);
-
+        // NEW: 3-Second Countdown Logic
+        window.startCountdownSequence = () => {
+            // 1. Setup State
             state.playerName = document.getElementById('player-name').value || "Player 1";
             document.getElementById('player-display').textContent = state.playerName;
-            
             state.score = 0;
             state.timeLeft = GAME_DURATION;
             state.currentWordIndex = 0;
             state.currentLetterIndex = 0;
             state.words = generateWordList();
             
-            isPlaying = true;
+            // 2. Show Game Screen (But Game Not Active Yet)
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById('screen-game').style.display = 'flex';
             
-            switchScreen('screen-game');
+            // 3. Start Camera
+            enableCam();
+
+            // 4. Play Countoff Sound & Visuals
+            sounds.countoff.play();
+            const overlay = document.getElementById('countdown-overlay');
+            overlay.style.display = 'flex';
+            
+            let count = 3;
+            overlay.textContent = count;
+            
+            const countInterval = setInterval(() => {
+                count--;
+                if (count > 0) {
+                    overlay.textContent = count;
+                } else {
+                    clearInterval(countInterval);
+                    overlay.style.display = 'none';
+                    beginGameplay(); // Start the actual game
+                }
+            }, 1000); // 1 second beats (matches most 3s countdown sounds)
+        };
+
+        function beginGameplay() {
+            isPlaying = true;
+            sounds.music.currentTime = 0;
+            sounds.music.play();
+            
+            document.getElementById('hint-img').style.opacity = "1"; // Show hints
             updateWordDisplay();
-            enableCam(); 
 
             if (timerInterval) clearInterval(timerInterval);
             timerInterval = setInterval(() => {
@@ -323,10 +381,11 @@
                 updateTimerUI();
                 if(state.timeLeft <= 0) endGame();
             }, 1000);
-        };
+        }
 
         window.skipWord = () => {
-            sounds.skip.play(); // Play Skip Sound
+            if(!isPlaying) return;
+            sounds.skip.play();
             state.score = Math.max(0, state.score - 50);
             state.currentWordIndex++;
             state.currentLetterIndex = 0;
@@ -369,8 +428,8 @@
             const target = word[state.currentLetterIndex];
 
             if(detectedLetter.toUpperCase() === target) {
-                sounds.correct.currentTime = 0; // Reset sound so it can rapid fire
-                sounds.correct.play(); // Play Correct Sound
+                sounds.correct.currentTime = 0;
+                sounds.correct.play();
 
                 state.currentLetterIndex++;
                 state.score += 10;
@@ -388,10 +447,14 @@
             isPlaying = false;
             sounds.music.pause();
             sounds.music.currentTime = 0;
-            sounds.victory.play(); // Play Victory Sound
+            sounds.victory.play();
 
             clearInterval(timerInterval);
-            switchScreen('screen-summary');
+            
+            // Hide Game Screen manually
+            document.getElementById('screen-game').style.display = 'none';
+            document.getElementById('screen-summary').classList.add('active');
+            
             document.getElementById('final-player-name').textContent = state.playerName;
             document.getElementById('final-score').textContent = state.score;
         }
@@ -410,9 +473,9 @@
         }
 
         async function predictWebcam() {
-            if(!isPlaying) return; 
-
-            // Resizing Logic: Match canvas to video's actual size
+            // Note: We run this loop even during countdown so user can see themselves
+            // But 'checkGesture' is blocked by isPlaying flag
+            
             if (video.videoWidth > 0 && video.videoHeight > 0) {
                 canvasElement.width = video.videoWidth;
                 canvasElement.height = video.videoHeight;
@@ -446,7 +509,10 @@
                         canvasCtx.fillText(topGesture, -100, 50); 
                         canvasCtx.restore();
 
-                        checkGesture(topGesture); 
+                        // Only check points if game is actually running
+                        if (isPlaying) {
+                            checkGesture(topGesture); 
+                        }
                     }
                 }
             }
