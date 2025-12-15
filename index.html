@@ -5,7 +5,7 @@
     </title>
     <head>
         <link rel="stylesheet" href="mystyle.css">
-
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         
         
     </head>
@@ -42,16 +42,21 @@
         </div>
 
 
+    <div class="container">
 
 
-
-        <div class="container">
-            <div class="center">
-                <h1>
-                    Jared Hirt
-                </h1>
-                <img src="Headshot.JPG" alt="Professional Headshot by Focal Point Studio">
-            </div>
+        <div class="center">
+    <h1>Jared Hirt</h1>
+    <p style="font-size: 1.2em; color: #555;">Computer Science Honours Student | Researcher | Developer</p>
+    
+    <img src="Headshot.JPG" alt="Jared Hirt Headshot">
+    
+    <div class="social-links" style="margin-top: 20px;">
+        <a href="mailto:JaredHirt@hotmail.com" title="Email"><i class="fa fa-envelope" style="font-size:30px; margin: 0 15px;"></i></a>
+        <a href="https://ca.linkedin.com/in/jared-hirt" title="LinkedIn"><i class="fa fa-linkedin" style="font-size:30px; margin: 0 15px;"></i></a>
+        <a href="https://github.com/JaredHirt" title="GitHub"><i class="fa fa-github" style="font-size:30px; margin: 0 15px;"></i></a>
+    </div>
+</div>
 
         <br>
     
@@ -111,6 +116,8 @@
         <br>
         </h2>
 
+        <div class="project-grid">
+        <div class="project-card">
         <h3>
             Generative AI for Indigenous Language Preservation (Dakelh)
         </h3>
@@ -122,7 +129,10 @@
             <li>Curated a specialized corpus from the Dakelh translation of the New Testament and implemented a custom <b>Byte Pair Encoding (BPE)</b> tokenizer to handle unique morphology.</li>
             <li>Trained the model using <b>NanoGPT</b> and <b>Hugging Face Transformers</b>, creating a tool to generate synthetic educational text for language revitalization.</li>
         </ul>
+        </div>
 
+
+        <div class="project-card">
         <h3>
             Gamified ASL Fingerspelling System
         </h3>
@@ -135,7 +145,10 @@
             <li>Designed a temporal classification extension using sequential hand landmarks to recognize dynamic gestures (e.g., 'J', 'Z').</li>
             <li><a href="projects/ASL/index.html">Try a modified javascript Speedy Signers demo here!</a></li>
         </ul>
+        </div>
 
+
+        <div class="project-card">
         <h3>
             Robust Consensus Algorithms (Honours Thesis)
         </h3>
@@ -149,7 +162,10 @@
             <li> Oral presentation at 22nd IEEE UIC Conference </li>
             <li> <a href="thesis.pdf">Take a look at my paper!</a> </li>
         </ul>
+        </div>
 
+
+        <div class="project-card">
         <h3>
             Grocery Helper Application
         </h3>
@@ -161,6 +177,8 @@
             <li>Engineered REST API integrations with TheMealDB and implemented persistent user state management with Google Authentication.</li>
             <li><a href="flutter/groceryhelper/index.html">Try a Grocery Helper Demo here!</a></li>
         </ul>
+        </div>
+        </div>
 
 
         <h2 id="TeachingLeadership">
@@ -228,18 +246,27 @@
         </ul>
 
 
-        <h2 id="TechnicalSkills">
-        Technical Skills
-        <br>
-        </h2>
-
-        <p>
-            <b>Computer Languages:</b> <b>Intermediate:</b> Java, Python, Dart, ARM Assembly, Javascript | <b>Beginner:</b> C, C++<br>
-            <b>Frameworks & APIs:</b> <b>Intermediate:</b> Django, Flutter, Firebase | <b>Beginner:</b> REST, Google Authentication, NanoGPT, MediaPipe<br>
-            <b>Database:</b> <b>Intermediate:</b> SQL, Firebase, JSON DB<br>
-            <b>Tools:</b> <b>Advanced:</b> LaTeX | <b>Intermediate:</b> Git, Vim, Microsoft Office 365, Linux (Ubuntu)<br>
-            <b>Operating Systems:</b> <b>Advanced:</b> Windows 7-11 | <b>Intermediate:</b> Ubuntu 18-24
-        </p>
+        <h2 id="TechnicalSkills">Technical Skills</h2>
+<div class="skills-container">
+    <div class="skill-category">
+        <h3>Languages</h3>
+        <div class="tags">
+            <span class="tag intermediate">Java</span>
+            <span class="tag intermediate">Python</span>
+            <span class="tag intermediate">Dart</span>
+            <span class="tag beginner">C++</span>
+        </div>
+    </div>
+    <div class="skill-category">
+        <h3>Frameworks & Tools</h3>
+        <div class="tags">
+            <span class="tag intermediate">Django</span>
+            <span class="tag intermediate">Flutter</span>
+            <span class="tag advanced">LaTeX</span>
+            <span class="tag beginner">NanoGPT</span>
+        </div>
+    </div>
+</div>
 
 
         <h2 id="AwardsandScholarships">

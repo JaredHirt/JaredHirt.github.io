@@ -1,3 +1,7 @@
+html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 70px; /* This fixes the sticky header covering text problem */
+}
 body {
     margin: 0;
     padding: 0;
@@ -108,8 +112,6 @@ h1 {
 }
 
 h2 {
-    padding-top: 60px; /* Space for sticky header anchors */
-    margin-top: -30px; /* Pull back up slightly */
     margin-bottom: 20px;
     color: #2980b9; /* Modern blue */
     font-size: 1.8em;
@@ -175,6 +177,41 @@ a:hover {
     color: #1abc9c;
     text-decoration: underline;
 }
+
+.skills-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+}
+.project-card {
+    background: white;
+    border: 1px solid #eee;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+.project-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    border-color: #b3e5fc; /* Subtle blue highlight */
+}
+.tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+.tag {
+    background-color: #ecf0f1;
+    padding: 5px 12px;
+    border-radius: 15px;
+    font-size: 0.9em;
+    font-weight: 500;
+    color: #2c3e50;
+}
+/* Optional: Color code by proficiency */
+.tag.advanced { border-left: 3px solid #27ae60; }
+.tag.intermediate { border-left: 3px solid #f39c12; }
 
 /* Responsive adjustments */
 @media screen and (max-width: 600px) {
