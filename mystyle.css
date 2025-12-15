@@ -1,3 +1,6 @@
+* {
+    box-sizing: border-box;
+}
 html {
     scroll-behavior: smooth;
     scroll-padding-top: 70px; /* This fixes the sticky header covering text problem */
