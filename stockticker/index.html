@@ -292,7 +292,8 @@
             onSnapshot(doc(db, "users", uid), (docSnap) => {
                 if (docSnap.exists()) {
                     const data = docSnap.data();
-                    document.getElementById('user-cash').innerText = "$" + data.cash.toLocaleString();
+                    // Shows $5,000.00 instead of $5,000
+document.getElementById('user-cash').innerText = "$" + data.cash.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
                     // Also sync name from DB if it exists
                     if(data.name) document.getElementById('user-name').innerText = data.name;
                     
@@ -329,7 +330,10 @@
                     
                     const userData = userDoc.data();
                     const currentPrice = marketDoc.data()[stock];
-                    const totalCost = currentPrice * quantity;
+                    
+                    // === UPDATED MATH (Price is Cents, Cost is Dollars) ===
+                    const totalCost = (currentPrice / 100) * quantity; 
+                    // Example: Price 100 * 500 shares / 100 = $500.00
                     
                     if (type === 'buy') {
                         if (userData.cash < totalCost) throw `Not enough cash! Needed: $${totalCost.toLocaleString()}`;
