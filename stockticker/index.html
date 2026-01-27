@@ -131,7 +131,10 @@
     <div id="leaderboard-section">
         <h2>🏆 Leaderboards</h2>
         <div style="display:flex; flex-wrap:wrap; justify-content:center; margin-bottom:10px;">
-            <button onclick="loadLeaderboard('cash')" class="btn-tab active">Cash</button>
+            <button onclick="loadLeaderboard('net_worth')" class="btn-tab active">Net Worth</button>
+            
+            <button onclick="loadLeaderboard('cash')" class="btn-tab">Cash</button>
+            
             <button onclick="loadLeaderboard('stocks.Gold')" class="btn-tab">Gold</button>
             <button onclick="loadLeaderboard('stocks.Silver')" class="btn-tab">Silver</button>
             <button onclick="loadLeaderboard('stocks.Oil')" class="btn-tab">Oil</button>
@@ -271,7 +274,7 @@
                     await updateDoc(userRef, { name: cleanName });
                     await updateProfile(currentUser, { displayName: cleanName });
                     document.getElementById('user-name').innerText = cleanName;
-                    fetchLeaderboard('cash'); 
+                    fetchLeaderboard('net_worth'); 
                 } catch(e) { alert("Error updating name: " + e.message); }
             }
         };
@@ -288,12 +291,16 @@
                     el.innerText = price;
                     
                     // --- DYNAMIC GRADIENT (Red -> Yellow -> Green) ---
-                    // Map 0-200 price to Hue 0 (Red) - 120 (Green)
-                    // Cap price at 200 for color calculation
                     const safePrice = Math.min(Math.max(price, 0), 200); 
                     const hue = (safePrice / 200) * 120; 
                     el.style.color = `hsl(${hue}, 100%, 50%)`;
                 });
+
+                // Auto-refresh Net Worth if currently viewing it
+                const activeBtn = document.querySelector('.btn-tab.active');
+                if(activeBtn && activeBtn.innerText.includes("Net Worth")) {
+                    fetchLeaderboard('net_worth');
+                }
             }
         });
 
@@ -375,44 +382,106 @@
             } catch (e) { alert(e); }
         }
 
-        // --- 3. LEADERBOARD ---
+        // --- 3. LEADERBOARD (UPDATED FOR NET WORTH) ---
         async function fetchLeaderboard(criteria) {
+            // Update UI Tabs
             document.querySelectorAll('.btn-tab').forEach(b => b.classList.remove('active'));
-            event.target.classList.add('active');
+            // If function triggered by button click
+            if(event && event.target && event.target.classList) event.target.classList.add('active');
+            // If triggered automatically (initial load), highlight correct button
+            else {
+                const btns = Array.from(document.querySelectorAll('.btn-tab'));
+                const target = btns.find(b => b.innerText.toLowerCase().includes(criteria.replace('_',' '))) || btns[0];
+                target.classList.add('active');
+            }
+
             const lbBody = document.getElementById('leaderboard-body');
             const header = document.getElementById('lb-score-header');
             
-            lbBody.innerHTML = "<tr><td colspan='3' style='text-align:center; padding:20px;'>Fetching data...</td></tr>";
-            header.innerText = (criteria === 'cash') ? "Cash ($)" : "Shares";
+            lbBody.innerHTML = "<tr><td colspan='3' style='text-align:center; padding:20px;'>Calculating...</td></tr>";
+            
+            // Set Header Text
+            if(criteria === 'net_worth') header.innerText = "Net Worth ($)";
+            else if(criteria === 'cash') header.innerText = "Cash ($)";
+            else header.innerText = "Shares";
 
             try {
-                const q = query(collection(db, "users"), orderBy(criteria, "desc"), limit(12));
-                const querySnapshot = await getDocs(q);
-                
+                let sortedUsers = [];
+
+                if (criteria === 'net_worth') {
+                    // === A. NET WORTH LOGIC ===
+                    // 1. Fetch ALL users (Safe for small groups < 100 players)
+                    const q = query(collection(db, "users")); 
+                    const querySnapshot = await getDocs(q);
+                    
+                    if(querySnapshot.empty) { lbBody.innerHTML = "<tr><td colspan='3'>No players.</td></tr>"; return; }
+
+                    // 2. Calculate Net Worth for everyone
+                    const players = [];
+                    querySnapshot.forEach(doc => {
+                        const data = doc.data();
+                        let totalValue = data.cash || 0;
+                        
+                        // Add Stock Value: Qty * (Price / 100)
+                        if (data.stocks) {
+                            stocks.forEach(stock => {
+                                const qty = data.stocks[stock] || 0;
+                                const priceCents = marketPrices[stock] || 0; // Uses live global prices
+                                totalValue += qty * (priceCents / 100);
+                            });
+                        }
+                        players.push({ ...data, id: doc.id, score: totalValue });
+                    });
+
+                    // 3. Sort High to Low
+                    sortedUsers = players.sort((a, b) => b.score - a.score).slice(0, 12);
+
+                } else {
+                    // === B. STANDARD LOGIC (Cash / Stock Count) ===
+                    const q = query(collection(db, "users"), orderBy(criteria, "desc"), limit(12));
+                    const querySnapshot = await getDocs(q);
+                    
+                    querySnapshot.forEach(doc => {
+                        const data = doc.data();
+                        let val = 0;
+                        if(criteria === 'cash') val = data.cash;
+                        else val = data.stocks ? (data.stocks[criteria.split('.')[1]] || 0) : 0;
+                        
+                        sortedUsers.push({ ...data, id: doc.id, score: val });
+                    });
+                }
+
+                // === C. RENDER TABLE ===
                 lbBody.innerHTML = "";
                 let rank = 1;
-                if(querySnapshot.empty) { lbBody.innerHTML = "<tr><td colspan='3' style='text-align:center;'>No players yet.</td></tr>"; return; }
-
-                querySnapshot.forEach((doc) => {
-                    const data = doc.data();
-                    const isMe = currentUser && (doc.id === currentUser.uid);
+                sortedUsers.forEach((user) => {
+                    const isMe = currentUser && (user.id === currentUser.uid);
                     
-                    // Format score as Money (No decimals) or Number
-                    let score = 0;
-                    if(criteria === 'cash') {
-                         score = "$" + Math.floor(data.cash).toLocaleString();
+                    // Format output
+                    let displayScore = "";
+                    if (criteria === 'net_worth' || criteria === 'cash') {
+                        // Show dollars, no cents
+                        displayScore = "$" + Math.floor(user.score).toLocaleString();
                     } else {
-                         score = (data.stocks ? (data.stocks[criteria.split('.')[1]] || 0) : 0).toLocaleString();
+                        // Show share count
+                        displayScore = user.score.toLocaleString();
                     }
 
                     const row = document.createElement('tr');
                     if(isMe) row.classList.add('is-me');
-                    row.innerHTML = `<td>#${rank++}</td><td>${data.name || "Anonymous"} ${isMe ? "(You)" : ""}</td><td style="text-align:right;">${score}</td>`;
+                    
+                    row.innerHTML = `
+                        <td>#${rank++}</td>
+                        <td>${user.name || "Anonymous"} ${isMe ? "(You)" : ""}</td>
+                        <td style="text-align:right;">${displayScore}</td>
+                    `;
                     lbBody.appendChild(row);
                 });
+
             } catch (error) {
                 console.error(error);
-                if (error.message.includes("requires an index")) lbBody.innerHTML = `<tr><td colspan='3' style='color:var(--red); text-align:center; font-size:0.8rem;'>⚠️ Index Missing (Check Console)</td></tr>`;
+                if (error.message.includes("requires an index")) lbBody.innerHTML = `<tr><td colspan='3' style='color:var(--red); text-align:center;'>⚠️ Index Missing (Check Console)</td></tr>`;
+                else lbBody.innerHTML = `<tr><td colspan='3' style='text-align:center;'>Error loading data.</td></tr>`;
             }
         }
 
@@ -427,7 +496,6 @@
                     return;
                 }
 
-                // A. Update List
                 const docs = snapshot.docs.map(d => d.data());
                 listEl.innerHTML = "";
                 docs.forEach(data => {
@@ -440,7 +508,6 @@
                     listEl.appendChild(li);
                 });
 
-                // B. Update Chart
                 const chartData = [...docs].reverse();
                 if(chartData.length > 0 && chartData[0].snapshot) {
                     lastChartData = chartData;
@@ -490,7 +557,9 @@
 
         // Init
         if ('serviceWorker' in navigator) navigator.serviceWorker.register('service-worker.js', { scope: '/stockticker/' });
-        fetchLeaderboard('cash');
+        
+        // Start by loading Net Worth!
+        fetchLeaderboard('net_worth');
         loadHistory();
     </script>
 </body>
