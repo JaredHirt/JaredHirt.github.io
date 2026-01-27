@@ -1,0 +1,362 @@
+
+       
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Stock Ticker Live</title>
+    <link rel="manifest" href="manifest.json">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* --- DARK THEME & LAYOUT --- */
+        :root { --bg: #121212; --card: #1e1e1e; --text: #e0e0e0; --green: #4caf50; --red: #ff5252; --gold: #ffd700; --blue: #2196F3; }
+        body { font-family: 'Courier New', monospace; background: var(--bg); color: var(--text); margin: 0; padding: 15px; padding-bottom: 100px; }
+        
+        /* Typography */
+        h1 { text-align: center; color: var(--green); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px; font-size: 1.8rem; }
+        h2, h3 { border-bottom: 1px solid #333; padding-bottom: 5px; color: #888; text-transform: uppercase; letter-spacing: 1px;}
+        h2 { font-size: 1.2rem; margin-top: 30px; }
+        h3 { font-size: 0.9rem; margin-top: 0; }
+
+        /* Auth Section */
+        #auth-section { background: var(--card); padding: 15px; border-radius: 8px; border: 1px solid #333; text-align: center; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        .cash-display { font-size: 1.5rem; color: var(--gold); font-weight: bold; margin: 10px 0; }
+        
+        /* Buttons */
+        button { border: none; padding: 10px 15px; cursor: pointer; font-size: 0.9rem; border-radius: 4px; font-family: inherit; font-weight: bold; transition: opacity 0.2s; }
+        button:active { opacity: 0.7; }
+        .btn-login { background: var(--green); color: white; width: 100%; max-width: 250px; }
+        .btn-logout { background: #333; color: #aaa; font-size: 0.8rem; padding: 5px 10px; }
+        .btn-buy { background: var(--blue); color: white; flex: 1; margin-right: 5px; }
+        .btn-sell { background: var(--red); color: white; flex: 1; margin-left: 5px; }
+        .btn-tab { background: #333; color: #ccc; margin: 2px; font-size: 0.75rem; }
+        .btn-tab.active { background: var(--gold); color: black; }
+
+        /* Dashboard (Charts) */
+        .dashboard-container { max-width: 800px; margin: 0 auto 20px auto; }
+        .dashboard-card { background: var(--card); padding: 10px; border-radius: 8px; border: 1px solid #333; margin-bottom: 15px; }
+        
+        /* Market Grid */
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; }
+        .card { background: var(--card); padding: 15px; border: 1px solid #333; border-radius: 8px; text-align: center; position: relative; }
+        .stock-name { font-size: 1.1rem; font-weight: bold; margin-bottom: 5px; color: #fff; }
+        .stock-price { font-size: 2rem; font-weight: bold; color: var(--green); margin: 5px 0; }
+        .stock-owned { font-size: 0.8rem; color: #888; margin-bottom: 10px; }
+        .trade-actions { display: flex; justify-content: space-between; margin-top: 10px; }
+
+        /* Leaderboard Table */
+        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        th { text-align: left; color: #888; padding: 8px; border-bottom: 1px solid #444; }
+        td { padding: 10px 8px; border-bottom: 1px solid #222; }
+        tr.is-me { color: var(--green); font-weight: bold; background: rgba(76, 175, 80, 0.1); }
+    </style>
+</head>
+<body>
+
+    <h1>Stock Ticker</h1>
+
+    <div id="auth-section">
+        <div id="login-view">
+            <p style="margin-bottom:10px; color:#aaa;">Sign in to trade and save progress.</p>
+            <button id="login-btn" class="btn-login">Sign In with Google</button>
+        </div>
+
+        <div id="profile-view" style="display:none;">
+            <div>WALLET BALANCE</div>
+            <div class="cash-display" id="user-cash">$0</div>
+            <div style="font-size: 0.8rem; color: #888;">Welcome, <span id="user-name">Player</span></div>
+            <div style="margin-top:10px;">
+                <button id="logout-btn" class="btn-logout">Sign Out</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard-container">
+        <div class="dashboard-card">
+            <canvas id="marketChart" height="200"></canvas>
+        </div>
+        <div class="dashboard-card">
+            <h3>Recent Market Activity</h3>
+            <ul id="activity-list" style="list-style: none; padding: 0; margin: 0; font-size: 0.85rem; color: #ccc;">
+                <li style="text-align:center; padding:10px;">Waiting for market open...</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="grid" id="market-grid">
+        </div>
+
+    <div id="leaderboard-section">
+        <h2>🏆 Leaderboards</h2>
+        <div style="display:flex; flex-wrap:wrap; justify-content:center; margin-bottom:10px;">
+            <button onclick="loadLeaderboard('cash')" class="btn-tab active">Cash</button>
+            <button onclick="loadLeaderboard('stocks.Gold')" class="btn-tab">Gold</button>
+            <button onclick="loadLeaderboard('stocks.Silver')" class="btn-tab">Silver</button>
+            <button onclick="loadLeaderboard('stocks.Oil')" class="btn-tab">Oil</button>
+            <button onclick="loadLeaderboard('stocks.Bonds')" class="btn-tab">Bonds</button>
+            <button onclick="loadLeaderboard('stocks.Industrial')" class="btn-tab">Ind.</button>
+            <button onclick="loadLeaderboard('stocks.Grain')" class="btn-tab">Grain</button>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 15%">#</th>
+                    <th>Player</th>
+                    <th id="lb-score-header" style="text-align:right;">Score</th>
+                </tr>
+            </thead>
+            <tbody id="leaderboard-body">
+                <tr><td colspan="3" style="text-align:center; padding:20px;">Loading...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getFirestore, doc, onSnapshot, runTransaction, setDoc, collection, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
+
+        const firebaseConfig = {
+          apiKey: "AIzaSyDZLaQkYIBjV-TKc3al9M97ALLwa3X2sKg",
+          authDomain: "stock-ticker-game.firebaseapp.com",
+          projectId: "stock-ticker-game",
+          storageBucket: "stock-ticker-game.firebasestorage.app",
+          messagingSenderId: "756004846868",
+          appId: "1:756004846868:web:91b2511bbe6a26213a9601",
+          measurementId: "G-ZC3VXLMJS5"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        const provider = new GoogleAuthProvider();
+        
+        let currentUser = null;
+        let marketPrices = {};
+        let myChart = null; // Chart instance
+
+        // --- INIT UI ---
+        const stocks = ['Gold', 'Silver', 'Oil', 'Bonds', 'Industrial', 'Grain'];
+        const grid = document.getElementById('market-grid');
+        
+        // Generate Cards
+        stocks.forEach(stock => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML = `
+                <div class="stock-name">${stock}</div>
+                <div class="stock-price" id="price-${stock}">--</div>
+                <div class="stock-owned">Owned: <span id="owned-${stock}">0</span></div>
+                <div class="trade-actions">
+                    <button class="btn-buy" onclick="trade('${stock}', 'buy')">BUY</button>
+                    <button class="btn-sell" onclick="trade('${stock}', 'sell')">SELL</button>
+                </div>
+            `;
+            grid.appendChild(card);
+        });
+
+        // Expose functions to window
+        window.trade = (stock, type) => handleTrade(stock, type);
+        window.loadLeaderboard = (criteria) => fetchLeaderboard(criteria);
+
+        // --- 1. REALTIME LISTENERS ---
+
+        // A. Market Prices
+        onSnapshot(doc(db, "game_state", "current_market"), (docSnap) => {
+            if (docSnap.exists()) {
+                marketPrices = docSnap.data();
+                stocks.forEach(s => {
+                    const price = marketPrices[s];
+                    const el = document.getElementById(`price-${s}`);
+                    el.innerText = price;
+                    
+                    if(price === 100) el.style.color = '#ff5252'; 
+                    else if (price === 50) el.style.color = '#2196F3';
+                    else el.style.color = '#4caf50';
+                });
+            }
+        });
+
+        // B. Authentication
+        onAuthStateChanged(auth, (user) => {
+            currentUser = user;
+            if (user) {
+                document.getElementById('login-view').style.display = 'none';
+                document.getElementById('profile-view').style.display = 'block';
+                document.getElementById('user-name').innerText = user.displayName;
+                setupUserListener(user.uid);
+            } else {
+                document.getElementById('login-view').style.display = 'block';
+                document.getElementById('profile-view').style.display = 'none';
+            }
+        });
+
+        function setupUserListener(uid) {
+            onSnapshot(doc(db, "users", uid), (docSnap) => {
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    document.getElementById('user-cash').innerText = "$" + data.cash.toLocaleString();
+                    stocks.forEach(s => {
+                        const count = (data.stocks && data.stocks[s]) ? data.stocks[s] : 0;
+                        document.getElementById(`owned-${s}`).innerText = count;
+                    });
+                } else {
+                    setDoc(doc(db, "users", uid), {
+                        name: currentUser.displayName,
+                        cash: 5000,
+                        stocks: { Gold: 0, Silver: 0, Oil: 0, Bonds: 0, Industrial: 0, Grain: 0 }
+                    });
+                }
+            });
+        }
+
+        // --- 2. ACTIONS ---
+        document.getElementById('login-btn').onclick = () => signInWithPopup(auth, provider);
+        document.getElementById('logout-btn').onclick = () => signOut(auth);
+
+        async function handleTrade(stock, type) {
+            if (!currentUser) return alert("Please sign in to trade.");
+            if (marketPrices[stock] === undefined) return alert("Market data loading...");
+
+            const userRef = doc(db, "users", currentUser.uid);
+            const marketRef = doc(db, "game_state", "current_market");
+
+            try {
+                await runTransaction(db, async (transaction) => {
+                    const userDoc = await transaction.get(userRef);
+                    const marketDoc = await transaction.get(marketRef);
+                    if (!userDoc.exists()) throw "User profile not found.";
+                    
+                    const userData = userDoc.data();
+                    const currentPrice = marketDoc.data()[stock];
+                    
+                    if (type === 'buy') {
+                        if (userData.cash < currentPrice) throw `Not enough cash! Needed: $${currentPrice}.`;
+                        transaction.update(userRef, {
+                            cash: userData.cash - currentPrice,
+                            [`stocks.${stock}`]: (userData.stocks[stock] || 0) + 1
+                        });
+                    } else {
+                        if ((userData.stocks[stock] || 0) <= 0) throw "You don't own any shares.";
+                        transaction.update(userRef, {
+                            cash: userData.cash + currentPrice,
+                            [`stocks.${stock}`]: userData.stocks[stock] - 1
+                        });
+                    }
+                });
+            } catch (e) { alert(e); }
+        }
+
+        // --- 3. LEADERBOARD ---
+        async function fetchLeaderboard(criteria) {
+            document.querySelectorAll('.btn-tab').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            const lbBody = document.getElementById('leaderboard-body');
+            const header = document.getElementById('lb-score-header');
+            
+            lbBody.innerHTML = "<tr><td colspan='3' style='text-align:center; padding:20px;'>Fetching data...</td></tr>";
+            header.innerText = (criteria === 'cash') ? "Cash ($)" : "Shares";
+
+            try {
+                const q = query(collection(db, "users"), orderBy(criteria, "desc"), limit(12));
+                const querySnapshot = await getDocs(q);
+                
+                lbBody.innerHTML = "";
+                let rank = 1;
+                if(querySnapshot.empty) { lbBody.innerHTML = "<tr><td colspan='3' style='text-align:center;'>No players yet.</td></tr>"; return; }
+
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const isMe = currentUser && (doc.id === currentUser.uid);
+                    let score = (criteria === 'cash') ? "$" + data.cash.toLocaleString() : (data.stocks ? (data.stocks[criteria.split('.')[1]] || 0) : 0);
+                    const row = document.createElement('tr');
+                    if(isMe) row.classList.add('is-me');
+                    row.innerHTML = `<td>#${rank++}</td><td>${data.name || "Anonymous"} ${isMe ? "(You)" : ""}</td><td style="text-align:right;">${score}</td>`;
+                    lbBody.appendChild(row);
+                });
+            } catch (error) {
+                console.error(error);
+                if (error.message.includes("requires an index")) lbBody.innerHTML = `<tr><td colspan='3' style='color:var(--red); text-align:center; font-size:0.8rem;'>⚠️ Index Missing (Check Console)</td></tr>`;
+            }
+        }
+
+        // --- 4. CHARTS & HISTORY (New) ---
+        async function loadHistory() {
+            const listEl = document.getElementById('activity-list');
+            // Get last 12 rolls
+            const q = query(collection(db, "history"), orderBy("timestamp", "desc"), limit(12));
+            
+            // Note: This needs the index on 'history' collection (timestamp desc).
+            // If it fails, check console for link.
+            onSnapshot(q, (snapshot) => {
+                if (snapshot.empty) {
+                    listEl.innerHTML = "<li style='padding:10px; text-align:center;'>No activity today.</li>";
+                    return;
+                }
+
+                // A. Update List
+                const docs = snapshot.docs.map(d => d.data());
+                listEl.innerHTML = "";
+                docs.forEach(data => {
+                    const time = data.timestamp ? new Date(data.timestamp.toDate()).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : "--:--";
+                    const color = data.message.includes("UP") ? "#4caf50" : (data.message.includes("DOWN") ? "#ff5252" : "#ffd700");
+                    const li = document.createElement('li');
+                    li.style.padding = "8px 0";
+                    li.style.borderBottom = "1px solid #333";
+                    li.innerHTML = `<span style="color:#666; margin-right:10px; font-size:0.8em;">${time}</span><span style="color:${color}; font-weight:bold;">${data.message}</span>`;
+                    listEl.appendChild(li);
+                });
+
+                // B. Update Chart (Needs Snapshot Data from Backend)
+                // We reverse to get oldest -> newest for the X-axis
+                const chartData = [...docs].reverse();
+                if(chartData.length > 0 && chartData[0].snapshot) {
+                    const labels = chartData.map(d => d.timestamp ? new Date(d.timestamp.toDate()).toLocaleTimeString([], {hour: '2-digit'}) : "");
+                    const datasets = stocks.map(stock => ({
+                        label: stock,
+                        data: chartData.map(d => d.snapshot[stock] || 100),
+                        borderColor: getStockColor(stock),
+                        borderWidth: 2,
+                        pointRadius: 2,
+                        fill: false,
+                        tension: 0.1
+                    }));
+                    renderChart(labels, datasets);
+                }
+            });
+        }
+
+        function getStockColor(stock) {
+            const colors = { 'Gold': '#ffd700', 'Silver': '#c0c0c0', 'Oil': '#888888', 'Bonds': '#4caf50', 'Industrial': '#ff9800', 'Grain': '#e91e63' };
+            return colors[stock] || '#fff';
+        }
+
+        function renderChart(labels, datasets) {
+            const ctx = document.getElementById('marketChart').getContext('2d');
+            if (myChart) myChart.destroy();
+            myChart = new Chart(ctx, {
+                type: 'line',
+                data: { labels: labels, datasets: datasets },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true, max: 100, grid: { color: '#333' }, ticks: { color: '#888' } },
+                        x: { grid: { display: false }, ticks: { color: '#888' } }
+                    },
+                    plugins: { legend: { labels: { color: '#ccc' } } }
+                }
+            });
+        }
+
+        // Init PWA & Features
+        if ('serviceWorker' in navigator) navigator.serviceWorker.register('service-worker.js', { scope: '/stockticker/' });
+        fetchLeaderboard('cash');
+        loadHistory();
+    </script>
+</body>
+</html>
