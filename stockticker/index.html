@@ -58,6 +58,10 @@
         .btn-tab { background: var(--border); color: var(--text-muted); margin: 2px; font-size: 0.75rem; }
         .btn-tab.active { background: var(--gold); color: black; border: 1px solid var(--gold); }
         .btn-edit { background: none; border: none; padding: 0 5px; cursor: pointer; font-size: 1rem; }
+        
+        /* Bankruptcy Button */
+        .btn-bankrupt { background: #555; color: #ff5252; width: 100%; margin-bottom: 10px; border: 1px solid var(--red); }
+        .btn-bankrupt:disabled { opacity: 0.5; cursor: not-allowed; border-color: #555; color: #888; }
 
         /* Dashboard (Charts) */
         .dashboard-container { max-width: 800px; margin: 0 auto 20px auto; }
@@ -106,6 +110,10 @@
                 Playing as: <strong id="user-name" style="color:var(--text)">Player</strong>
                 <button class="btn-edit" onclick="changeName()">✏️</button>
             </div>
+
+            <button id="bankruptcy-btn" class="btn-bankrupt" style="display:none;" onclick="declareBankruptcy()">
+                💀 DECLARE BANKRUPTCY
+            </button>
 
             <div>
                 <button id="logout-btn" class="btn-logout">Sign Out</button>
@@ -182,7 +190,7 @@
         
         let currentUser = null;
         let marketPrices = {};
-        let userPortfolio = { cash: 0, stocks: {} }; // Store locally for Max Calc
+        let userPortfolio = { cash: 0, stocks: {} }; 
         let myChart = null;
         let lastChartData = [];
 
@@ -249,13 +257,11 @@
             const input = document.getElementById(`qty-${stock}`);
             
             if (type === 'buy') {
-                // Calculate max affordable, round down to nearest 500
                 if(priceDollars <= 0) return; // Avoid divide by zero
                 const maxRaw = userPortfolio.cash / priceDollars;
                 const maxValid = Math.floor(maxRaw / 500) * 500;
-                input.value = maxValid > 0 ? maxValid : 500; // Default to 500 if can't afford any
+                input.value = maxValid > 0 ? maxValid : 500; 
             } else {
-                // Sell all owned, round down to nearest 500
                 const owned = userPortfolio.stocks[stock] || 0;
                 const maxValid = Math.floor(owned / 500) * 500;
                 input.value = maxValid > 0 ? maxValid : 500;
@@ -279,6 +285,42 @@
             }
         };
 
+        // --- BANKRUPTCY LOGIC ---
+        window.declareBankruptcy = async () => {
+            if (!currentUser) return;
+            if(!confirm("Declare Bankruptcy?\n\n- Wallet resets to $2,000\n- Stocks reset to 0\n- 72 Hour Cooldown")) return;
+
+            try {
+                await runTransaction(db, async (transaction) => {
+                    const userRef = doc(db, "users", currentUser.uid);
+                    const docSnap = await transaction.get(userRef);
+                    if (!docSnap.exists()) throw "User not found";
+                    
+                    const data = docSnap.data();
+                    const totalShares = Object.values(data.stocks || {}).reduce((a, b) => a + b, 0);
+
+                    if (data.cash > 500) throw "You have too much cash to declare bankruptcy.";
+                    if (totalShares > 0) throw "You must sell all stocks before declaring bankruptcy.";
+
+                    if (data.lastBankruptcy) {
+                        const lastTime = data.lastBankruptcy.toDate().getTime();
+                        const now = Date.now();
+                        const hoursPassed = (now - lastTime) / (1000 * 60 * 60);
+                        if (hoursPassed < 72) throw `Wait ${Math.ceil(72 - hoursPassed)} more hours.`;
+                    }
+
+                    transaction.update(userRef, {
+                        cash: 2000,
+                        stocks: { Gold: 0, Silver: 0, Oil: 0, Bonds: 0, Industrial: 0, Grain: 0 },
+                        lastBankruptcy: new Date()
+                    });
+                });
+                alert("You have been bailed out. Wallet set to $2,000.");
+            } catch (e) {
+                alert("Failed: " + e);
+            }
+        };
+
         // --- 1. REALTIME LISTENERS ---
 
         // A. Market Prices & Gradient Color
@@ -290,7 +332,6 @@
                     const el = document.getElementById(`price-${s}`);
                     el.innerText = price;
                     
-                    // --- DYNAMIC GRADIENT (Red -> Yellow -> Green) ---
                     const safePrice = Math.min(Math.max(price, 0), 200); 
                     const hue = (safePrice / 200) * 120; 
                     el.style.color = `hsl(${hue}, 100%, 50%)`;
@@ -312,21 +353,44 @@
                 document.getElementById('profile-view').style.display = 'block';
                 document.getElementById('user-name').innerText = user.displayName || "Player";
                 
-                // User Data Listener
                 onSnapshot(doc(db, "users", user.uid), (docSnap) => {
                     if (docSnap.exists()) {
                         const data = docSnap.data();
                         userPortfolio = data; // Save for Max Calc
                         
-                        // REMOVED DECIMALS (Math.floor)
                         document.getElementById('user-cash').innerText = "$" + Math.floor(data.cash).toLocaleString();
-                        
                         if(data.name) document.getElementById('user-name').innerText = data.name;
                         
                         stocks.forEach(s => {
                             const count = (data.stocks && data.stocks[s]) ? data.stocks[s] : 0;
                             document.getElementById(`owned-${s}`).innerText = count;
                         });
+
+                        // CHECK BANKRUPTCY ELIGIBILITY
+                        const totalShares = Object.values(data.stocks || {}).reduce((a, b) => a + b, 0);
+                        const bankruptcyBtn = document.getElementById('bankruptcy-btn');
+                        
+                        if (data.cash <= 500 && totalShares === 0) {
+                            bankruptcyBtn.style.display = 'block';
+                            if (data.lastBankruptcy) {
+                                const lastTime = data.lastBankruptcy.toDate().getTime();
+                                const now = Date.now();
+                                const hoursLeft = 72 - ((now - lastTime) / (1000 * 60 * 60));
+                                if (hoursLeft > 0) {
+                                    bankruptcyBtn.innerText = `💀 Cooldown (${Math.ceil(hoursLeft)}h)`;
+                                    bankruptcyBtn.disabled = true;
+                                } else {
+                                    bankruptcyBtn.innerText = "💀 DECLARE BANKRUPTCY";
+                                    bankruptcyBtn.disabled = false;
+                                }
+                            } else {
+                                bankruptcyBtn.innerText = "💀 DECLARE BANKRUPTCY";
+                                bankruptcyBtn.disabled = false;
+                            }
+                        } else {
+                            bankruptcyBtn.style.display = 'none';
+                        }
+
                     } else {
                         // Start user with $5000
                         setDoc(doc(db, "users", user.uid), {
@@ -362,7 +426,6 @@
                     const userData = userDoc.data();
                     const currentPrice = marketDoc.data()[stock];
                     
-                    // === COST CALCULATION: Price is Cents, Cost is Dollars ===
                     const totalCost = (currentPrice / 100) * quantity;
                     
                     if (type === 'buy') {
@@ -382,13 +445,10 @@
             } catch (e) { alert(e); }
         }
 
-        // --- 3. LEADERBOARD (UPDATED FOR NET WORTH) ---
+        // --- 3. LEADERBOARD (NET WORTH) ---
         async function fetchLeaderboard(criteria) {
-            // Update UI Tabs
             document.querySelectorAll('.btn-tab').forEach(b => b.classList.remove('active'));
-            // If function triggered by button click
             if(event && event.target && event.target.classList) event.target.classList.add('active');
-            // If triggered automatically (initial load), highlight correct button
             else {
                 const btns = Array.from(document.querySelectorAll('.btn-tab'));
                 const target = btns.find(b => b.innerText.toLowerCase().includes(criteria.replace('_',' '))) || btns[0];
@@ -400,7 +460,6 @@
             
             lbBody.innerHTML = "<tr><td colspan='3' style='text-align:center; padding:20px;'>Calculating...</td></tr>";
             
-            // Set Header Text
             if(criteria === 'net_worth') header.innerText = "Net Worth ($)";
             else if(criteria === 'cash') header.innerText = "Cash ($)";
             else header.innerText = "Shares";
@@ -409,35 +468,30 @@
                 let sortedUsers = [];
 
                 if (criteria === 'net_worth') {
-                    // === A. NET WORTH LOGIC ===
-                    // 1. Fetch ALL users (Safe for small groups < 100 players)
+                    // NET WORTH LOGIC
                     const q = query(collection(db, "users")); 
                     const querySnapshot = await getDocs(q);
                     
                     if(querySnapshot.empty) { lbBody.innerHTML = "<tr><td colspan='3'>No players.</td></tr>"; return; }
 
-                    // 2. Calculate Net Worth for everyone
                     const players = [];
                     querySnapshot.forEach(doc => {
                         const data = doc.data();
                         let totalValue = data.cash || 0;
-                        
-                        // Add Stock Value: Qty * (Price / 100)
                         if (data.stocks) {
                             stocks.forEach(stock => {
                                 const qty = data.stocks[stock] || 0;
-                                const priceCents = marketPrices[stock] || 0; // Uses live global prices
+                                const priceCents = marketPrices[stock] || 0;
                                 totalValue += qty * (priceCents / 100);
                             });
                         }
                         players.push({ ...data, id: doc.id, score: totalValue });
                     });
 
-                    // 3. Sort High to Low
                     sortedUsers = players.sort((a, b) => b.score - a.score).slice(0, 12);
 
                 } else {
-                    // === B. STANDARD LOGIC (Cash / Stock Count) ===
+                    // STANDARD LOGIC
                     const q = query(collection(db, "users"), orderBy(criteria, "desc"), limit(12));
                     const querySnapshot = await getDocs(q);
                     
@@ -446,38 +500,27 @@
                         let val = 0;
                         if(criteria === 'cash') val = data.cash;
                         else val = data.stocks ? (data.stocks[criteria.split('.')[1]] || 0) : 0;
-                        
                         sortedUsers.push({ ...data, id: doc.id, score: val });
                     });
                 }
 
-                // === C. RENDER TABLE ===
+                // RENDER
                 lbBody.innerHTML = "";
                 let rank = 1;
                 sortedUsers.forEach((user) => {
                     const isMe = currentUser && (user.id === currentUser.uid);
-                    
-                    // Format output
                     let displayScore = "";
                     if (criteria === 'net_worth' || criteria === 'cash') {
-                        // Show dollars, no cents
                         displayScore = "$" + Math.floor(user.score).toLocaleString();
                     } else {
-                        // Show share count
                         displayScore = user.score.toLocaleString();
                     }
 
                     const row = document.createElement('tr');
                     if(isMe) row.classList.add('is-me');
-                    
-                    row.innerHTML = `
-                        <td>#${rank++}</td>
-                        <td>${user.name || "Anonymous"} ${isMe ? "(You)" : ""}</td>
-                        <td style="text-align:right;">${displayScore}</td>
-                    `;
+                    row.innerHTML = `<td>#${rank++}</td><td>${user.name || "Anonymous"} ${isMe ? "(You)" : ""}</td><td style="text-align:right;">${displayScore}</td>`;
                     lbBody.appendChild(row);
                 });
-
             } catch (error) {
                 console.error(error);
                 if (error.message.includes("requires an index")) lbBody.innerHTML = `<tr><td colspan='3' style='color:var(--red); text-align:center;'>⚠️ Index Missing (Check Console)</td></tr>`;
@@ -558,7 +601,6 @@
         // Init
         if ('serviceWorker' in navigator) navigator.serviceWorker.register('service-worker.js', { scope: '/stockticker/' });
         
-        // Start by loading Net Worth!
         fetchLeaderboard('net_worth');
         loadHistory();
     </script>
