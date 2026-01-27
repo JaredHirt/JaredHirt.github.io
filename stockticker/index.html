@@ -7,9 +7,9 @@
     <link rel="manifest" href="manifest.json">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        /* --- 1. CSS VARIABLES (THEME ENGINE) --- */
+        /* --- CSS VARIABLES --- */
         :root {
-            /* Default Dark Mode */
+            /* Dark Mode Defaults */
             --bg: #121212;
             --card: #1e1e1e;
             --text: #e0e0e0;
@@ -36,7 +36,6 @@
 
         body { font-family: 'Courier New', monospace; background: var(--bg); color: var(--text); margin: 0; padding: 15px; padding-bottom: 100px; transition: background 0.3s, color 0.3s; }
         
-        /* Typography */
         h1 { text-align: center; color: var(--green); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px; font-size: 1.8rem; position: relative;}
         h2, h3 { border-bottom: 1px solid var(--border); padding-bottom: 5px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;}
         h2 { font-size: 1.2rem; margin-top: 30px; }
@@ -58,8 +57,6 @@
         .btn-sell { background: var(--red); color: white; flex: 1; margin-left: 5px; }
         .btn-tab { background: var(--border); color: var(--text-muted); margin: 2px; font-size: 0.75rem; }
         .btn-tab.active { background: var(--gold); color: black; border: 1px solid var(--gold); }
-        
-        /* Edit Name Button */
         .btn-edit { background: none; border: none; padding: 0 5px; cursor: pointer; font-size: 1rem; }
 
         /* Dashboard (Charts) */
@@ -67,15 +64,20 @@
         .dashboard-card { background: var(--card); padding: 10px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 15px; }
         
         /* Market Grid */
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; }
         .card { background: var(--card); padding: 15px; border: 1px solid var(--border); border-radius: 8px; text-align: center; position: relative; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .stock-name { font-size: 1.1rem; font-weight: bold; margin-bottom: 5px; color: var(--text); }
-        .stock-price { font-size: 2rem; font-weight: bold; color: var(--green); margin: 5px 0; }
+        .stock-price { font-size: 2rem; font-weight: bold; transition: color 0.5s; margin: 5px 0; }
         .stock-owned { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 10px; }
         .trade-actions { display: flex; justify-content: space-between; margin-top: 10px; }
 
-        /* Dropdown Input */
-        select { width: 90px; padding: 5px; text-align: center; background: var(--input-bg); color: var(--text); border: 1px solid var(--border); border-radius: 4px; font-family: inherit; font-weight: bold; cursor: pointer;}
+        /* Max Buttons */
+        .max-controls { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--blue); margin-bottom: 4px; padding: 0 5px; }
+        .max-btn { cursor: pointer; text-decoration: underline; }
+        .max-btn:hover { color: var(--gold); }
+
+        /* Input */
+        input[type="number"] { width: 100px; padding: 8px; text-align: center; background: var(--input-bg); color: var(--text); border: 1px solid var(--border); border-radius: 4px; font-family: inherit; font-weight: bold; font-size: 1rem; }
 
         /* Leaderboard Table */
         table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
@@ -98,7 +100,7 @@
 
         <div id="profile-view" style="display:none;">
             <div style="color:var(--text-muted); font-size:0.8rem;">WALLET BALANCE</div>
-            <div class="cash-display" id="user-cash">$0.00</div>
+            <div class="cash-display" id="user-cash">$0</div>
             
             <div style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 10px;">
                 Playing as: <strong id="user-name" style="color:var(--text)">Player</strong>
@@ -177,6 +179,7 @@
         
         let currentUser = null;
         let marketPrices = {};
+        let userPortfolio = { cash: 0, stocks: {} }; // Store locally for Max Calc
         let myChart = null;
         let lastChartData = [];
 
@@ -188,6 +191,7 @@
             document.getElementById('theme-toggle').innerText = isLight ? '🌙' : '☀';
             if (lastChartData.length > 0) updateChart(lastChartData);
         };
+        // Load saved theme
         if (localStorage.getItem('theme') === 'light') {
             document.body.classList.add('light-mode');
             document.getElementById('theme-toggle').innerText = '🌙';
@@ -197,7 +201,7 @@
         const stocks = ['Gold', 'Silver', 'Oil', 'Bonds', 'Industrial', 'Grain'];
         const grid = document.getElementById('market-grid');
         
-        // Generate Cards with DROPDOWN
+        // Generate Cards
         stocks.forEach(stock => {
             const card = document.createElement('div');
             card.className = 'card';
@@ -206,14 +210,13 @@
                 <div class="stock-price" id="price-${stock}">--</div>
                 <div class="stock-owned">Owned: <span id="owned-${stock}">0</span></div>
                 
-                <div style="margin: 10px 0; display:flex; align-items:center; justify-content:center; gap:5px;">
-                    <span style="font-size:0.8rem; color:var(--text-muted);">Qty:</span>
-                    <select id="qty-${stock}">
-                        <option value="500">500</option>
-                        <option value="1000">1,000</option>
-                        <option value="2000">2,000</option>
-                        <option value="5000">5,000</option>
-                    </select>
+                <div class="max-controls">
+                    <span class="max-btn" onclick="setMax('${stock}', 'buy')">Max Buy</span>
+                    <span class="max-btn" onclick="setMax('${stock}', 'sell')">Max Sell</span>
+                </div>
+
+                <div style="margin-bottom: 10px; display:flex; align-items:center; justify-content:center;">
+                    <input type="number" id="qty-${stock}" value="500" min="500" step="500">
                 </div>
 
                 <div class="trade-actions">
@@ -224,13 +227,38 @@
             grid.appendChild(card);
         });
 
-        // Window Functions
+        // --- GLOBAL FUNCTIONS ---
         window.trade = (stock, type) => {
             const qtyInput = document.getElementById(`qty-${stock}`);
             const qty = parseInt(qtyInput.value);
-            if (!qty || qty <= 0) return alert("Please select a valid quantity.");
+            
+            // Enforce denominations (Must be multiple of 500)
+            if (!qty || qty <= 0 || qty % 500 !== 0) {
+                return alert("Quantity must be a multiple of 500 (e.g., 500, 1000, 1500).");
+            }
             handleTrade(stock, type, qty);
         };
+
+        window.setMax = (stock, type) => {
+            if(!marketPrices[stock]) return;
+            const priceCents = marketPrices[stock];
+            const priceDollars = priceCents / 100;
+            const input = document.getElementById(`qty-${stock}`);
+            
+            if (type === 'buy') {
+                // Calculate max affordable, round down to nearest 500
+                if(priceDollars <= 0) return; // Avoid divide by zero
+                const maxRaw = userPortfolio.cash / priceDollars;
+                const maxValid = Math.floor(maxRaw / 500) * 500;
+                input.value = maxValid > 0 ? maxValid : 500; // Default to 500 if can't afford any
+            } else {
+                // Sell all owned, round down to nearest 500
+                const owned = userPortfolio.stocks[stock] || 0;
+                const maxValid = Math.floor(owned / 500) * 500;
+                input.value = maxValid > 0 ? maxValid : 500;
+            }
+        };
+
         window.loadLeaderboard = (criteria) => fetchLeaderboard(criteria);
         
         window.changeName = async () => {
@@ -250,7 +278,7 @@
 
         // --- 1. REALTIME LISTENERS ---
 
-        // A. Market Prices
+        // A. Market Prices & Gradient Color
         onSnapshot(doc(db, "game_state", "current_market"), (docSnap) => {
             if (docSnap.exists()) {
                 marketPrices = docSnap.data();
@@ -259,9 +287,12 @@
                     const el = document.getElementById(`price-${s}`);
                     el.innerText = price;
                     
-                    if(price >= 200) el.style.color = '#2196F3'; // Split territory
-                    else if(price === 100) el.style.color = '#ff5252'; // Crash territory (low end of split) or normal
-                    else el.style.color = '#4caf50';
+                    // --- DYNAMIC GRADIENT (Red -> Yellow -> Green) ---
+                    // Map 0-200 price to Hue 0 (Red) - 120 (Green)
+                    // Cap price at 200 for color calculation
+                    const safePrice = Math.min(Math.max(price, 0), 200); 
+                    const hue = (safePrice / 200) * 120; 
+                    el.style.color = `hsl(${hue}, 100%, 50%)`;
                 });
             }
         });
@@ -273,36 +304,36 @@
                 document.getElementById('login-view').style.display = 'none';
                 document.getElementById('profile-view').style.display = 'block';
                 document.getElementById('user-name').innerText = user.displayName || "Player";
-                setupUserListener(user.uid);
+                
+                // User Data Listener
+                onSnapshot(doc(db, "users", user.uid), (docSnap) => {
+                    if (docSnap.exists()) {
+                        const data = docSnap.data();
+                        userPortfolio = data; // Save for Max Calc
+                        
+                        // REMOVED DECIMALS (Math.floor)
+                        document.getElementById('user-cash').innerText = "$" + Math.floor(data.cash).toLocaleString();
+                        
+                        if(data.name) document.getElementById('user-name').innerText = data.name;
+                        
+                        stocks.forEach(s => {
+                            const count = (data.stocks && data.stocks[s]) ? data.stocks[s] : 0;
+                            document.getElementById(`owned-${s}`).innerText = count;
+                        });
+                    } else {
+                        // Start user with $5000
+                        setDoc(doc(db, "users", user.uid), {
+                            name: currentUser.displayName,
+                            cash: 5000,
+                            stocks: { Gold: 0, Silver: 0, Oil: 0, Bonds: 0, Industrial: 0, Grain: 0 }
+                        });
+                    }
+                });
             } else {
                 document.getElementById('login-view').style.display = 'block';
                 document.getElementById('profile-view').style.display = 'none';
             }
         });
-
-        function setupUserListener(uid) {
-            onSnapshot(doc(db, "users", uid), (docSnap) => {
-                if (docSnap.exists()) {
-                    const data = docSnap.data();
-                    // SHOW CENTS (Minimum 2 decimals)
-                    document.getElementById('user-cash').innerText = "$" + data.cash.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
-                    
-                    if(data.name) document.getElementById('user-name').innerText = data.name;
-                    
-                    stocks.forEach(s => {
-                        const count = (data.stocks && data.stocks[s]) ? data.stocks[s] : 0;
-                        document.getElementById(`owned-${s}`).innerText = count;
-                    });
-                } else {
-                    // Start user with $5000.00
-                    setDoc(doc(db, "users", uid), {
-                        name: currentUser.displayName,
-                        cash: 5000,
-                        stocks: { Gold: 0, Silver: 0, Oil: 0, Bonds: 0, Industrial: 0, Grain: 0 }
-                    });
-                }
-            });
-        }
 
         // --- 2. TRADE ACTIONS ---
         document.getElementById('login-btn').onclick = () => signInWithPopup(auth, provider);
@@ -328,7 +359,7 @@
                     const totalCost = (currentPrice / 100) * quantity;
                     
                     if (type === 'buy') {
-                        if (userData.cash < totalCost) throw `Not enough cash! Needed: $${totalCost.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+                        if (userData.cash < totalCost) throw `Not enough cash! Needed: $${totalCost.toLocaleString()}`;
                         transaction.update(userRef, {
                             cash: userData.cash - totalCost,
                             [`stocks.${stock}`]: (userData.stocks[stock] || 0) + quantity
@@ -365,10 +396,11 @@
                 querySnapshot.forEach((doc) => {
                     const data = doc.data();
                     const isMe = currentUser && (doc.id === currentUser.uid);
-                    // Format score as Money or Number
+                    
+                    // Format score as Money (No decimals) or Number
                     let score = 0;
                     if(criteria === 'cash') {
-                         score = "$" + data.cash.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                         score = "$" + Math.floor(data.cash).toLocaleString();
                     } else {
                          score = (data.stocks ? (data.stocks[criteria.split('.')[1]] || 0) : 0).toLocaleString();
                     }
