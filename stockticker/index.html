@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -75,8 +74,8 @@
         .stock-owned { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 10px; }
         .trade-actions { display: flex; justify-content: space-between; margin-top: 10px; }
 
-        /* Inputs */
-        input[type="number"] { width: 70px; padding: 5px; text-align: center; background: var(--input-bg); color: var(--text); border: 1px solid var(--border); border-radius: 4px; font-family: inherit; font-weight: bold;}
+        /* Dropdown Input */
+        select { width: 90px; padding: 5px; text-align: center; background: var(--input-bg); color: var(--text); border: 1px solid var(--border); border-radius: 4px; font-family: inherit; font-weight: bold; cursor: pointer;}
 
         /* Leaderboard Table */
         table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
@@ -99,7 +98,7 @@
 
         <div id="profile-view" style="display:none;">
             <div style="color:var(--text-muted); font-size:0.8rem;">WALLET BALANCE</div>
-            <div class="cash-display" id="user-cash">$0</div>
+            <div class="cash-display" id="user-cash">$0.00</div>
             
             <div style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 10px;">
                 Playing as: <strong id="user-name" style="color:var(--text)">Player</strong>
@@ -155,13 +154,11 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-        // ADDED: updateDoc to imports
         import { getFirestore, doc, onSnapshot, runTransaction, setDoc, updateDoc, collection, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
-        // ADDED: updateProfile to imports
         import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
 
         // ======================================================
-        // TODO: PASTE YOUR FIREBASE CONFIG KEY A HERE
+        // TODO: PASTE YOUR FIREBASE CONFIG KEY HERE
         // ======================================================
         const firebaseConfig = {
           apiKey: "AIzaSyDZLaQkYIBjV-TKc3al9M97ALLwa3X2sKg",
@@ -200,7 +197,7 @@
         const stocks = ['Gold', 'Silver', 'Oil', 'Bonds', 'Industrial', 'Grain'];
         const grid = document.getElementById('market-grid');
         
-        // Generate Cards
+        // Generate Cards with DROPDOWN
         stocks.forEach(stock => {
             const card = document.createElement('div');
             card.className = 'card';
@@ -211,7 +208,12 @@
                 
                 <div style="margin: 10px 0; display:flex; align-items:center; justify-content:center; gap:5px;">
                     <span style="font-size:0.8rem; color:var(--text-muted);">Qty:</span>
-                    <input type="number" id="qty-${stock}" value="100" min="1">
+                    <select id="qty-${stock}">
+                        <option value="500">500</option>
+                        <option value="1000">1,000</option>
+                        <option value="2000">2,000</option>
+                        <option value="5000">5,000</option>
+                    </select>
                 </div>
 
                 <div class="trade-actions">
@@ -222,36 +224,27 @@
             grid.appendChild(card);
         });
 
-        // Expose functions to window
+        // Window Functions
         window.trade = (stock, type) => {
             const qtyInput = document.getElementById(`qty-${stock}`);
             const qty = parseInt(qtyInput.value);
-            if (!qty || qty <= 0) return alert("Please enter a valid quantity.");
+            if (!qty || qty <= 0) return alert("Please select a valid quantity.");
             handleTrade(stock, type, qty);
         };
         window.loadLeaderboard = (criteria) => fetchLeaderboard(criteria);
         
-        // NEW: Expose Change Name function
         window.changeName = async () => {
             if(!currentUser) return;
             const newName = prompt("Enter your new Gamertag:", currentUser.displayName);
             if(newName && newName.trim().length > 0) {
                 try {
                     const cleanName = newName.trim();
-                    // 1. Update Firestore (What the leaderboard sees)
                     const userRef = doc(db, "users", currentUser.uid);
                     await updateDoc(userRef, { name: cleanName });
-                    
-                    // 2. Update Auth Profile (What your browser sees)
                     await updateProfile(currentUser, { displayName: cleanName });
-                    
-                    // 3. Update UI
                     document.getElementById('user-name').innerText = cleanName;
-                    // Refresh leaderboard to show change immediately
                     fetchLeaderboard('cash'); 
-                } catch(e) {
-                    alert("Error updating name: " + e.message);
-                }
+                } catch(e) { alert("Error updating name: " + e.message); }
             }
         };
 
@@ -266,20 +259,19 @@
                     const el = document.getElementById(`price-${s}`);
                     el.innerText = price;
                     
-                    if(price === 100) el.style.color = '#ff5252'; 
-                    else if (price === 50) el.style.color = '#2196F3';
+                    if(price >= 200) el.style.color = '#2196F3'; // Split territory
+                    else if(price === 100) el.style.color = '#ff5252'; // Crash territory (low end of split) or normal
                     else el.style.color = '#4caf50';
                 });
             }
         });
 
-        // B. Authentication
+        // B. Auth & Profile
         onAuthStateChanged(auth, (user) => {
             currentUser = user;
             if (user) {
                 document.getElementById('login-view').style.display = 'none';
                 document.getElementById('profile-view').style.display = 'block';
-                // Note: We prioritize the name in the DB if possible, otherwise use Auth name
                 document.getElementById('user-name').innerText = user.displayName || "Player";
                 setupUserListener(user.uid);
             } else {
@@ -292,9 +284,9 @@
             onSnapshot(doc(db, "users", uid), (docSnap) => {
                 if (docSnap.exists()) {
                     const data = docSnap.data();
-                    // Shows $5,000.00 instead of $5,000
-document.getElementById('user-cash').innerText = "$" + data.cash.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
-                    // Also sync name from DB if it exists
+                    // SHOW CENTS (Minimum 2 decimals)
+                    document.getElementById('user-cash').innerText = "$" + data.cash.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                    
                     if(data.name) document.getElementById('user-name').innerText = data.name;
                     
                     stocks.forEach(s => {
@@ -302,6 +294,7 @@ document.getElementById('user-cash').innerText = "$" + data.cash.toLocaleString(
                         document.getElementById(`owned-${s}`).innerText = count;
                     });
                 } else {
+                    // Start user with $5000.00
                     setDoc(doc(db, "users", uid), {
                         name: currentUser.displayName,
                         cash: 5000,
@@ -311,7 +304,7 @@ document.getElementById('user-cash').innerText = "$" + data.cash.toLocaleString(
             });
         }
 
-        // --- 2. ACTIONS ---
+        // --- 2. TRADE ACTIONS ---
         document.getElementById('login-btn').onclick = () => signInWithPopup(auth, provider);
         document.getElementById('logout-btn').onclick = () => signOut(auth);
 
@@ -331,12 +324,11 @@ document.getElementById('user-cash').innerText = "$" + data.cash.toLocaleString(
                     const userData = userDoc.data();
                     const currentPrice = marketDoc.data()[stock];
                     
-                    // === UPDATED MATH (Price is Cents, Cost is Dollars) ===
-                    const totalCost = (currentPrice / 100) * quantity; 
-                    // Example: Price 100 * 500 shares / 100 = $500.00
+                    // === COST CALCULATION: Price is Cents, Cost is Dollars ===
+                    const totalCost = (currentPrice / 100) * quantity;
                     
                     if (type === 'buy') {
-                        if (userData.cash < totalCost) throw `Not enough cash! Needed: $${totalCost.toLocaleString()}`;
+                        if (userData.cash < totalCost) throw `Not enough cash! Needed: $${totalCost.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
                         transaction.update(userRef, {
                             cash: userData.cash - totalCost,
                             [`stocks.${stock}`]: (userData.stocks[stock] || 0) + quantity
@@ -373,7 +365,14 @@ document.getElementById('user-cash').innerText = "$" + data.cash.toLocaleString(
                 querySnapshot.forEach((doc) => {
                     const data = doc.data();
                     const isMe = currentUser && (doc.id === currentUser.uid);
-                    let score = (criteria === 'cash') ? "$" + data.cash.toLocaleString() : (data.stocks ? (data.stocks[criteria.split('.')[1]] || 0) : 0);
+                    // Format score as Money or Number
+                    let score = 0;
+                    if(criteria === 'cash') {
+                         score = "$" + data.cash.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                    } else {
+                         score = (data.stocks ? (data.stocks[criteria.split('.')[1]] || 0) : 0).toLocaleString();
+                    }
+
                     const row = document.createElement('tr');
                     if(isMe) row.classList.add('is-me');
                     row.innerHTML = `<td>#${rank++}</td><td>${data.name || "Anonymous"} ${isMe ? "(You)" : ""}</td><td style="text-align:right;">${score}</td>`;
@@ -443,7 +442,7 @@ document.getElementById('user-cash').innerText = "$" + data.cash.toLocaleString(
                     responsive: true,
                     maintainAspectRatio: false,
                     scales: {
-                        y: { beginAtZero: true, max: 100, grid: { color: gridColor }, ticks: { color: textColor } },
+                        y: { beginAtZero: true, max: 200, grid: { color: gridColor }, ticks: { color: textColor } },
                         x: { grid: { display: false }, ticks: { color: textColor } }
                     },
                     plugins: { legend: { labels: { color: textColor } } }
