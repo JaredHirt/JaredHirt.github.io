@@ -445,32 +445,20 @@
             } catch (e) { alert(e); }
         }
 
-        // --- 3. LEADERBOARD (OPTIMIZED - CLIENT SIDE SORTING) ---
+        // --- 3. LEADERBOARD (FINAL FIX) ---
         async function fetchLeaderboard(criteria) {
-            // 1. Highlight the correct tab
+            // 1. Highlight Tabs
             document.querySelectorAll('.btn-tab').forEach(b => b.classList.remove('active'));
             if(event && event.target && event.target.classList) event.target.classList.add('active');
-            else {
-                // Auto-highlight based on criteria string (e.g. "stocks.Gold")
-                const keyword = criteria.includes('.') ? criteria.split('.')[1] : criteria.replace('_', ' ');
-                const btns = Array.from(document.querySelectorAll('.btn-tab'));
-                const target = btns.find(b => b.innerText.includes(keyword)) || btns[0];
-                if(target) target.classList.add('active');
-            }
 
             const lbBody = document.getElementById('leaderboard-body');
             const header = document.getElementById('lb-score-header');
-            
-            // Show loading state
             lbBody.innerHTML = "<tr><td colspan='3' style='text-align:center; padding:20px; color:var(--text-muted);'>Loading live data...</td></tr>";
 
             try {
-                // ============================================================
-                // THE OPTIMIZATION: READ 1 DOCUMENT INSTEAD OF N DOCUMENTS
-                // ============================================================
-                // USE THIS INSTEAD
+                // 2. Read the Cached File
                 const lbRef = doc(db, "game_state", "leaderboard");
-                const directSnap = await getDoc(lbRef); // Much simpler!
+                const directSnap = await getDoc(lbRef);
 
                 if (!directSnap.exists()) {
                     lbBody.innerHTML = "<tr><td colspan='3'>Leaderboard calculating...</td></tr>";
@@ -478,51 +466,61 @@
                 }
 
                 const data = directSnap.data();
-                let players = data.all_players || []; // This is the list from Python
+                let players = data.all_players || [];
 
-                // ============================================================
-                // CLIENT-SIDE SORTING (FREE)
-                // ============================================================
-                // Python sends it sorted by Net Worth. If user wants Cash/Gold, we sort here.
+                // 3. ROBUST SORTING LOGIC
+                // We define the known stock list to catch them
+                const validStocks = ['Gold', 'Silver', 'Oil', 'Bonds', 'Industrial', 'Grain'];
                 
+                // Clean up the input (Handle "stocks.Gold" OR just "Gold")
+                let sortKey = criteria;
+                let isStock = false;
+
+                if (validStocks.includes(criteria)) {
+                    sortKey = criteria; // It's just "Gold"
+                    isStock = true;
+                } else if (criteria.startsWith('stocks.')) {
+                    sortKey = criteria.split('.')[1]; // It was "stocks.Gold", now "Gold"
+                    isStock = true;
+                }
+
+                // 4. PERFORM SORT
                 if (criteria === 'net_worth') {
                     header.innerText = "Net Worth ($)";
-                    // Already sorted by python, but double check
                     players.sort((a, b) => b.net_worth - a.net_worth);
                 } 
                 else if (criteria === 'cash') {
                     header.innerText = "Cash ($)";
                     players.sort((a, b) => b.cash - a.cash);
                 } 
-                else if (criteria.startsWith('stocks.')) {
-                    // Extract "Gold" from "stocks.Gold"
-                    const stockName = criteria.split('.')[1];
-                    header.innerText = `${stockName} Shares`;
-                    // Sort by that specific stock count
-                    players.sort((a, b) => (b.stocks[stockName] || 0) - (a.stocks[stockName] || 0));
+                else if (isStock) {
+                    header.innerText = `${sortKey} Shares`;
+                    // Safely check if stocks exists, then check the specific stock
+                    players.sort((a, b) => {
+                        const valA = (a.stocks && a.stocks[sortKey]) ? a.stocks[sortKey] : 0;
+                        const valB = (b.stocks && b.stocks[sortKey]) ? b.stocks[sortKey] : 0;
+                        return valB - valA;
+                    });
                 }
 
-                // ============================================================
-                // RENDER THE TABLE
-                // ============================================================
+                // 5. RENDER
                 lbBody.innerHTML = "";
                 let rank = 1;
                 
-                // Only show Top 50 to keep UI snappy
                 players.slice(0, 50).forEach((p) => {
                     const isMe = currentUser && (p.id === currentUser.uid);
                     
-                    // Determine what number to show in the "Score" column
                     let scoreDisplay = "";
                     if(criteria === 'net_worth') scoreDisplay = "$" + Math.floor(p.net_worth).toLocaleString();
                     else if(criteria === 'cash') scoreDisplay = "$" + Math.floor(p.cash).toLocaleString();
                     else {
-                        const stockName = criteria.split('.')[1];
-                        scoreDisplay = (p.stocks[stockName] || 0).toLocaleString();
+                        // Safe Access
+                        const qty = (p.stocks && p.stocks[sortKey]) ? p.stocks[sortKey] : 0;
+                        scoreDisplay = qty.toLocaleString();
                     }
 
                     const row = document.createElement('tr');
-                    if(isMe) row.classList.add('is-me'); // Highlights your own row
+                    if(isMe) row.classList.add('is-me');
                     
                     row.innerHTML = `
                         <td style="width:15%">#${rank++}</td>
@@ -532,22 +530,18 @@
                     lbBody.appendChild(row);
                 });
 
-                // Add "Last Updated" Timestamp at the bottom
+                // Timestamp Footer
                 if(data.updatedAt) {
-                    // Handle Firestore Timestamp or standard ISO string
                     const dateObj = data.updatedAt.toDate ? data.updatedAt.toDate() : new Date(data.updatedAt);
                     const timeStr = dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                    
                     const footer = document.createElement('tr');
-                    footer.innerHTML = `<td colspan="3" style="text-align:center; font-size:0.75rem; color:var(--text-muted); padding-top:15px;">
-                        Last Market Roll: ${timeStr}
-                    </td>`;
+                    footer.innerHTML = `<td colspan="3" style="text-align:center; font-size:0.75rem; color:var(--text-muted); padding-top:15px;">Last Update: ${timeStr}</td>`;
                     lbBody.appendChild(footer);
                 }
 
             } catch (e) {
                 console.error("Leaderboard Error:", e);
-                lbBody.innerHTML = `<tr><td colspan='3' style='text-align:center; color:var(--red);'>Error loading leaderboard.</td></tr>`;
+                lbBody.innerHTML = `<tr><td colspan='3' style='text-align:center;'>Error loading data.</td></tr>`;
             }
         }
 
