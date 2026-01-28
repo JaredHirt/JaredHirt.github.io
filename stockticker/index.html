@@ -167,7 +167,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-        import { getFirestore, doc, onSnapshot, runTransaction, setDoc, updateDoc, collection, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+        import { getFirestore, doc, onSnapshot, runTransaction, setDoc, updateDoc, collection, query, orderBy, limit, getDocs, getDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
 
         // ======================================================
@@ -468,15 +468,12 @@
                 // ============================================================
                 // THE OPTIMIZATION: READ 1 DOCUMENT INSTEAD OF N DOCUMENTS
                 // ============================================================
+                // USE THIS INSTEAD
                 const lbRef = doc(db, "game_state", "leaderboard");
-                const lbSnap = await getDocs(query(collection(db, "game_state"), where("__name__", "==", "leaderboard"))); 
-                // Note: Using getDocs with query is sometimes safer for cache behavior in plain JS SDK, 
-                // but getDoc(lbRef) is standard. Let's stick to the simplest standard:
-                
-                const directSnap = await getDoc(doc(db, "game_state", "leaderboard"));
+                const directSnap = await getDoc(lbRef); // Much simpler!
 
                 if (!directSnap.exists()) {
-                    lbBody.innerHTML = "<tr><td colspan='3' style='text-align:center;'>Leaderboard calculating... check back in 1 minute.</td></tr>";
+                    lbBody.innerHTML = "<tr><td colspan='3'>Leaderboard calculating...</td></tr>";
                     return;
                 }
 
