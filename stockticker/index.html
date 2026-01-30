@@ -6,13 +6,13 @@
     <title>Stock Ticker Live</title>
     <link rel="manifest" href="manifest.json">
     
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Courier+Prime:wght@700&family=Inter:wght@600&family=Orbitron:wght@700&family=Press+Start+2P&family=Fredoka:wght@600&display=swap" rel="stylesheet">
-    
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <style>
-        /* --- BASE VARIABLES (Set by JS) --- */
+        /* --- ERROR BOX (Hidden by default) --- */
+        #error-console { display:none; background:red; color:white; padding:15px; position:fixed; top:0; left:0; width:100%; z-index:9999; font-family:sans-serif; font-size:12px; }
+
+        /* --- BASE VARIABLES --- */
         :root {
             --bg: #121212;
             --card: #1e1e1e;
@@ -20,11 +20,12 @@
             --text-muted: #888;
             --border: #333;
             --input-bg: #2a2a2a;
-            --font-main: 'Courier Prime', monospace;
+            --font-main: 'Courier New', monospace;
             --accent: #ffd700;
             --green: #4caf50;
             --red: #ff5252;
             --blue: #2196F3;
+            --chart-grid: #333;
         }
 
         body { 
@@ -35,23 +36,20 @@
             transition: background 0.4s ease, color 0.4s ease; 
         }
         
-        h1 { text-align: center; color: var(--green); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px; font-size: 1.8rem; text-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: var(--green); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px; font-size: 1.8rem; }
         h2, h3 { border-bottom: 1px solid var(--border); padding-bottom: 5px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;}
 
-        /* UI CONTROLS */
-        #settings-btn { position: absolute; top: 15px; left: 15px; background: none; border: none; color: var(--text); font-size: 1.8rem; cursor: pointer; z-index: 10; padding: 0; transition: transform 0.2s; }
-        #settings-btn:hover { transform: rotate(90deg); }
-        
-        #theme-toggle { position: absolute; top: 15px; right: 15px; background: none; border: none; color: var(--text); font-size: 1.5rem; cursor: pointer; z-index: 10; transition: transform 0.2s; }
-        #theme-toggle:hover { transform: scale(1.2); }
+        /* CONTROLS */
+        #settings-btn { position: absolute; top: 15px; left: 15px; background: none; border: none; color: var(--text); font-size: 1.8rem; cursor: pointer; z-index: 10; padding: 0; }
+        #theme-toggle { position: absolute; top: 15px; right: 15px; background: none; border: none; color: var(--text); font-size: 1.5rem; cursor: pointer; z-index: 10; }
 
         /* AUTH CARD */
         #auth-section { background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid var(--border); text-align: center; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
         .cash-display { font-size: 1.8rem; color: var(--accent); font-weight: bold; margin: 10px 0; }
         
         /* BUTTONS */
-        button { border: none; padding: 12px 15px; cursor: pointer; font-size: 0.9rem; border-radius: 8px; font-family: inherit; font-weight: bold; transition: filter 0.2s, transform 0.1s; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        button:active { transform: scale(0.98); }
+        button { border: none; padding: 12px 15px; cursor: pointer; font-size: 0.9rem; border-radius: 8px; font-family: inherit; font-weight: bold; transition: opacity 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        button:active { opacity: 0.7; }
         .btn-login { background: var(--green); color: white; width: 100%; max-width: 250px; }
         .btn-logout { background: var(--border); color: var(--text-muted); font-size: 0.8rem; padding: 5px 10px; }
         .btn-buy { background: var(--blue); color: white; flex: 1; margin-right: 5px; }
@@ -75,20 +73,17 @@
             text-align: center; 
             position: relative; 
             box-shadow: 0 4px 6px rgba(0,0,0,0.05); 
-            transition: transform 0.2s;
         }
-        .card:hover { transform: translateY(-2px); border-color: var(--accent); }
 
         .stock-emoji { font-size: 2.5rem; margin-bottom: 5px; display: block; }
         .stock-name { font-size: 1.1rem; font-weight: bold; margin-bottom: 0; color: var(--text); }
-        .stock-price { font-size: 1.8rem; font-weight: bold; transition: color 0.5s; margin: 5px 0; font-family: monospace; }
+        .stock-price { font-size: 1.8rem; font-weight: bold; margin: 5px 0; font-family: monospace; }
         .stock-owned { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 10px; }
         .trade-actions { display: flex; justify-content: space-between; margin-top: 10px; }
 
         /* INPUTS */
         .max-controls { display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--blue); margin-bottom: 4px; padding: 0 5px; }
         .max-btn { cursor: pointer; text-decoration: underline; opacity: 0.8; }
-        .max-btn:hover { opacity: 1; color: var(--accent); }
         input[type="number"] { width: 100px; padding: 8px; text-align: center; background: var(--input-bg); color: var(--text); border: 1px solid var(--border); border-radius: 4px; font-family: inherit; font-weight: bold; font-size: 1rem; }
 
         /* LEADERBOARD */
@@ -101,11 +96,12 @@
         #settings-modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:1000; align-items:center; justify-content:center; backdrop-filter: blur(5px); }
         .theme-grid { display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin: 20px 0; max-height: 60vh; overflow-y: auto; }
         .btn-theme { padding:15px; border:1px solid var(--border); background:var(--bg); color:var(--text); text-align: left; border-radius: 8px; position: relative; overflow: hidden; }
-        .btn-theme:hover { border-color: var(--accent); transform: scale(1.02); }
         .theme-preview { width: 20px; height: 20px; border-radius: 50%; display: inline-block; margin-right: 5px; vertical-align: middle; border: 1px solid var(--text); }
     </style>
 </head>
 <body>
+
+    <div id="error-console" onclick="this.style.display='none'"></div>
 
     <button id="settings-btn" onclick="openSettings()">🎨</button>
     <button id="theme-toggle" onclick="toggleDarkMode()">☀</button>
@@ -119,10 +115,7 @@
                 <button onclick="closeSettings()" style="background:none; color:var(--text); font-size:1.5rem; padding:0;">×</button>
             </div>
             <p style="color:var(--text-muted); font-size:0.85rem; margin-top:5px;">Select a theme. Each theme has a Light and Dark mode.</p>
-            
-            <div class="theme-grid" id="theme-options">
-                </div>
-
+            <div class="theme-grid" id="theme-options"></div>
             <button onclick="closeSettings()" style="background:var(--text); color:var(--bg); width:100%;">Close</button>
         </div>
     </div>
@@ -164,15 +157,11 @@
         </div>
     </div>
 
-    <div class="grid" id="market-grid">
-        </div>
+    <div class="grid" id="market-grid"></div>
 
     <div id="leaderboard-section">
         <h2 style="text-align:center; margin-top:40px;">Global Rankings</h2>
-        
-        <div id="lb-buttons" style="display:flex; flex-wrap:wrap; justify-content:center; margin-bottom:15px;">
-            </div>
-
+        <div id="lb-buttons" style="display:flex; flex-wrap:wrap; justify-content:center; margin-bottom:15px;"></div>
         <table>
             <thead>
                 <tr>
@@ -188,9 +177,17 @@
     </div>
 
     <script type="module">
+        // --- 1. IMPORTS & CONFIG ---
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
         import { getFirestore, doc, onSnapshot, runTransaction, setDoc, updateDoc, collection, query, orderBy, limit, getDocs, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
+
+        // LOG ERRORS TO SCREEN
+        window.onerror = function(message, source, lineno, colno, error) {
+            const consoleDiv = document.getElementById('error-console');
+            consoleDiv.style.display = 'block';
+            consoleDiv.innerHTML += `ERROR: ${message} at line ${lineno}<br>`;
+        };
 
         const firebaseConfig = {
           apiKey: "AIzaSyDZLaQkYIBjV-TKc3al9M97ALLwa3X2sKg",
@@ -206,10 +203,18 @@
         const db = getFirestore(app);
         const auth = getAuth(app);
         const provider = new GoogleAuthProvider();
-        
-        // ======================================================
-        // 🎨 DUAL-MODE THEME ENGINE
-        // ======================================================
+
+        // --- 2. GLOBAL VARIABLES (DEFINED FIRST TO FIX HOISTING) ---
+        let currentUser = null;
+        let marketPrices = {};
+        let userPortfolio = { cash: 0, stocks: {} }; 
+        let myChart = null;
+        let lastChartData = []; // <--- THIS WAS THE CAUSE, NOW IT IS HERE
+        let isDataLoaded = false; 
+        let cachedLeaderboardData = null; 
+        let lastFetchTime = 0; 
+
+        // --- 3. THEME ENGINE ---
         const stocks = ['Gold', 'Silver', 'Oil', 'Bonds', 'Industrial', 'Grain'];
 
         const THEMES = {
@@ -217,8 +222,8 @@
                 name: 'Wall Street',
                 desc: 'The original terminal look.',
                 css: {
-                    dark: { '--bg': '#121212', '--card': '#1e1e1e', '--text': '#e0e0e0', '--border': '#333', '--input-bg': '#2a2a2a', '--font-main': "'Courier Prime', monospace", '--accent': '#ffd700', '--chart-grid': '#333' },
-                    light: { '--bg': '#f4f6f8', '--card': '#ffffff', '--text': '#212b36', '--border': '#dfe3e8', '--input-bg': '#f9fafb', '--font-main': "'Courier Prime', monospace", '--accent': '#0066cc', '--chart-grid': '#ddd' }
+                    dark: { '--bg': '#121212', '--card': '#1e1e1e', '--text': '#e0e0e0', '--border': '#333', '--input-bg': '#2a2a2a', '--font-main': "'Courier New', monospace", '--accent': '#ffd700', '--chart-grid': '#333' },
+                    light: { '--bg': '#f4f6f8', '--card': '#ffffff', '--text': '#212b36', '--border': '#dfe3e8', '--input-bg': '#f9fafb', '--font-main': "'Courier New', monospace", '--accent': '#0066cc', '--chart-grid': '#ddd' }
                 },
                 map: { 'Gold': {n:'Gold', e:'🏆'}, 'Silver': {n:'Silver', e:'🥈'}, 'Oil': {n:'Oil', e:'🛢️'}, 'Bonds': {n:'Bonds', e:'📜'}, 'Industrial': {n:'Industrial', e:'🏭'}, 'Grain': {n:'Grain', e:'🌾'} }
             },
@@ -226,8 +231,8 @@
                 name: 'Silicon Valley',
                 desc: 'Clean, modern, corporate.',
                 css: {
-                    dark: { '--bg': '#0d1117', '--card': '#161b22', '--text': '#c9d1d9', '--border': '#30363d', '--input-bg': '#21262d', '--font-main': "'Inter', sans-serif", '--accent': '#58a6ff', '--chart-grid': '#30363d' },
-                    light: { '--bg': '#ffffff', '--card': '#f6f8fa', '--text': '#24292f', '--border': '#d0d7de', '--input-bg': '#ffffff', '--font-main': "'Inter', sans-serif", '--accent': '#0969da', '--chart-grid': '#eaeaea' }
+                    dark: { '--bg': '#0d1117', '--card': '#161b22', '--text': '#c9d1d9', '--border': '#30363d', '--input-bg': '#21262d', '--font-main': "sans-serif", '--accent': '#58a6ff', '--chart-grid': '#30363d' },
+                    light: { '--bg': '#ffffff', '--card': '#f6f8fa', '--text': '#24292f', '--border': '#d0d7de', '--input-bg': '#ffffff', '--font-main': "sans-serif", '--accent': '#0969da', '--chart-grid': '#eaeaea' }
                 },
                 map: { 'Gold': {n:'Nvidia', e:'📼'}, 'Silver': {n:'Starlink', e:'📡'}, 'Oil': {n:'Tesla', e:'🔋'}, 'Bonds': {n:'Microsoft', e:'💾'}, 'Industrial': {n:'Amazon', e:'📦'}, 'Grain': {n:'Google', e:'🔎'} }
             },
@@ -235,8 +240,8 @@
                 name: 'Night City',
                 desc: 'High contrast sci-fi.',
                 css: {
-                    dark: { '--bg': '#050505', '--card': '#0a0a0a', '--text': '#00ff99', '--border': '#00ff99', '--input-bg': '#000', '--font-main': "'Orbitron', sans-serif", '--accent': '#ff00ff', '--chart-grid': '#003300' },
-                    light: { '--bg': '#e0e0e0', '--card': '#ffffff', '--text': '#000000', '--border': '#ff00ff', '--input-bg': '#f0f0f0', '--font-main': "'Orbitron', sans-serif", '--accent': '#00b36b', '--chart-grid': '#ccc' }
+                    dark: { '--bg': '#050505', '--card': '#0a0a0a', '--text': '#00ff99', '--border': '#00ff99', '--input-bg': '#000', '--font-main': "monospace", '--accent': '#ff00ff', '--chart-grid': '#003300' },
+                    light: { '--bg': '#e0e0e0', '--card': '#ffffff', '--text': '#000000', '--border': '#ff00ff', '--input-bg': '#f0f0f0', '--font-main': "monospace", '--accent': '#00b36b', '--chart-grid': '#ccc' }
                 },
                 map: { 'Gold': {n:'Neon Gas', e:'🧪'}, 'Silver': {n:'Neural Link', e:'🧠'}, 'Oil': {n:'Bio-Fuel', e:'🟢'}, 'Bonds': {n:'Credits', e:'💳'}, 'Industrial': {n:'Drones', e:'🛸'}, 'Grain': {n:'Paste', e:'🍱'} }
             },
@@ -244,8 +249,8 @@
                 name: 'Kingdoms',
                 desc: 'Old parchment and wood.',
                 css: {
-                    dark: { '--bg': '#2c241b', '--card': '#3e3226', '--text': '#e0d4b8', '--border': '#8a6a4b', '--input-bg': '#261f18', '--font-main': "'Cinzel', serif", '--accent': '#ffb74d', '--chart-grid': '#5c4d3c' },
-                    light: { '--bg': '#f3e5ab', '--card': '#fffbf0', '--text': '#4a3b2a', '--border': '#d4c5a3', '--input-bg': '#fff8e1', '--font-main': "'Cinzel', serif", '--accent': '#8a6a4b', '--chart-grid': '#d4c5a3' }
+                    dark: { '--bg': '#2c241b', '--card': '#3e3226', '--text': '#e0d4b8', '--border': '#8a6a4b', '--input-bg': '#261f18', '--font-main': "serif", '--accent': '#ffb74d', '--chart-grid': '#5c4d3c' },
+                    light: { '--bg': '#f3e5ab', '--card': '#fffbf0', '--text': '#4a3b2a', '--border': '#d4c5a3', '--input-bg': '#fff8e1', '--font-main': "serif", '--accent': '#8a6a4b', '--chart-grid': '#d4c5a3' }
                 },
                 map: { 'Gold': {n:'Dragon Scale', e:'🐉'}, 'Silver': {n:'Mithril', e:'⚔️'}, 'Oil': {n:'Elixir', e:'🧪'}, 'Bonds': {n:'Decrees', e:'📜'}, 'Industrial': {n:'Iron', e:'🛡️'}, 'Grain': {n:'Wheat', e:'🍞'} }
             },
@@ -253,48 +258,33 @@
                 name: 'Crypto Bro',
                 desc: 'Modern financial apps.',
                 css: {
-                    dark: { '--bg': '#1a1a2e', '--card': '#16213e', '--text': '#e94560', '--border': '#0f3460', '--input-bg': '#0f3460', '--font-main': "'Fredoka', sans-serif", '--accent': '#4caf50', '--chart-grid': '#2a2a4e' },
-                    light: { '--bg': '#f0f5ff', '--card': '#ffffff', '--text': '#1a1a2e', '--border': '#cddeff', '--input-bg': '#f8faff', '--font-main': "'Fredoka', sans-serif", '--accent': '#e94560', '--chart-grid': '#e0eaff' }
+                    dark: { '--bg': '#1a1a2e', '--card': '#16213e', '--text': '#e94560', '--border': '#0f3460', '--input-bg': '#0f3460', '--font-main': "sans-serif", '--accent': '#4caf50', '--chart-grid': '#2a2a4e' },
+                    light: { '--bg': '#f0f5ff', '--card': '#ffffff', '--text': '#1a1a2e', '--border': '#cddeff', '--input-bg': '#f8faff', '--font-main': "sans-serif", '--accent': '#e94560', '--chart-grid': '#e0eaff' }
                 },
                 map: { 'Gold': {n:'Bitcoin', e:'₿'}, 'Silver': {n:'Ethereum', e:'Ξ'}, 'Oil': {n:'Solana', e:'◎'}, 'Bonds': {n:'USDC', e:'💲'}, 'Industrial': {n:'Doge', e:'🐕'}, 'Grain': {n:'Pepe', e:'🐸'} }
-            },
-             'retro': {
-                name: '8-Bit Arcade',
-                desc: 'Retro game console.',
-                css: {
-                    dark: { '--bg': '#2b2b2b', '--card': '#444', '--text': '#bada55', '--border': '#000', '--input-bg': '#222', '--font-main': "'Press Start 2P', cursive", '--accent': '#ff0055', '--chart-grid': '#555' },
-                    light: { '--bg': '#9bbc0f', '--card': '#8bac0f', '--text': '#0f380f', '--border': '#0f380f', '--input-bg': '#9bbc0f', '--font-main': "'Press Start 2P', cursive", '--accent': '#306230', '--chart-grid': '#8bac0f' }
-                },
-                map: { 'Gold': {n:'1-Up', e:'🍄'}, 'Silver': {n:'Coin', e:'🪙'}, 'Oil': {n:'Star', e:'⭐'}, 'Bonds': {n:'Sword', e:'🗡️'}, 'Industrial': {n:'Brick', e:'🧱'}, 'Grain': {n:'Heart', e:'❤️'} }
             }
         };
 
-        // LOAD SETTINGS
         let currentThemeKey = localStorage.getItem('market_theme') || 'classic';
-        let isDarkMode = localStorage.getItem('theme_mode') !== 'light'; // Default to dark
-
+        let isDarkMode = localStorage.getItem('theme_mode') !== 'light'; 
         if(!THEMES[currentThemeKey]) currentThemeKey = 'classic';
-        
+
         function applyVisuals() {
             const t = THEMES[currentThemeKey];
             const mode = isDarkMode ? 'dark' : 'light';
             const root = document.documentElement;
-            
-            // 1. Inject CSS Variables
             const palette = t.css[mode];
+            
             Object.keys(palette).forEach(prop => {
                 root.style.setProperty(prop, palette[prop]);
             });
 
-            // 2. Update Toggle Icon
             document.getElementById('theme-toggle').innerText = isDarkMode ? '🌙' : '☀';
-
-            // 3. Save Preference
             localStorage.setItem('market_theme', currentThemeKey);
             localStorage.setItem('theme_mode', isDarkMode ? 'dark' : 'light');
 
-            // 4. Redraw Chart (to update grid colors)
-            if(lastChartData.length > 0) updateChart(lastChartData);
+            // SAFE CHART UPDATE
+            if(lastChartData && lastChartData.length > 0) updateChart(lastChartData);
         }
 
         // Apply immediately
@@ -304,14 +294,13 @@
             return THEMES[currentThemeKey].map[dbName] || {n: dbName, e: ''};
         }
 
-        // --- SETTINGS UI ---
+        // --- 4. GLOBAL UI FUNCTIONS ---
         window.openSettings = () => document.getElementById('settings-modal').style.display = 'flex';
         window.closeSettings = () => document.getElementById('settings-modal').style.display = 'none';
         
         window.setTheme = (key) => {
             currentThemeKey = key;
             applyVisuals();
-            // Need to reload to update Text Maps everywhere easily
             location.reload(); 
         };
 
@@ -320,43 +309,23 @@
             applyVisuals();
         };
 
-        // Generate Theme Buttons
+        // GENERATE THEME BUTTONS
         const themeContainer = document.getElementById('theme-options');
         Object.keys(THEMES).forEach(key => {
             const t = THEMES[key];
             const btn = document.createElement('button');
             btn.className = 'btn-theme';
             if(key === currentThemeKey) btn.style.border = '2px solid var(--accent)';
-            
-            // Preview Circle (uses the theme's dark bg)
             const circle = `<span class="theme-preview" style="background:${t.css.dark['--bg']}"></span>`;
-            
             btn.innerHTML = `${circle} <b>${t.name}</b><br><span style="font-size:0.75em; color:var(--text-muted)">${t.desc}</span>`;
             btn.onclick = () => window.setTheme(key);
             themeContainer.appendChild(btn);
         });
 
-        // ======================================================
-        // GLOBAL VARIABLES
-        // ======================================================
-        let currentUser = null;
-        let marketPrices = {};
-        let userPortfolio = { cash: 0, stocks: {} }; 
-        let myChart = null;
-        let lastChartData = [];
-        let isDataLoaded = false; 
-        let cachedLeaderboardData = null; 
-        let lastFetchTime = 0; 
-
-        // ======================================================
-        // INIT UI GENERATION
-        // ======================================================
-        
-        // 1. Generate Market Cards
+        // GENERATE MARKET GRID
         const grid = document.getElementById('market-grid');
         stocks.forEach(stock => {
             const info = getDisplayInfo(stock);
-            
             const card = document.createElement('div');
             card.className = 'card';
             card.innerHTML = `
@@ -364,16 +333,13 @@
                 <div class="stock-name">${info.n}</div>
                 <div class="stock-price" id="price-${stock}">--</div>
                 <div class="stock-owned">Owned: <span id="owned-${stock}">0</span></div>
-                
                 <div class="max-controls">
                     <span class="max-btn" onclick="setMax('${stock}', 'buy')">Max Buy</span>
                     <span class="max-btn" onclick="setMax('${stock}', 'sell')">Max Sell</span>
                 </div>
-
                 <div style="margin-bottom: 10px; display:flex; align-items:center; justify-content:center;">
                     <input type="number" id="qty-${stock}" value="500" min="500" step="500">
                 </div>
-
                 <div class="trade-actions">
                     <button class="btn-buy" onclick="trade('${stock}', 'buy')">BUY</button>
                     <button class="btn-sell" onclick="trade('${stock}', 'sell')">SELL</button>
@@ -382,7 +348,7 @@
             grid.appendChild(card);
         });
 
-        // 2. Generate Leaderboard Buttons
+        // GENERATE LEADERBOARD BUTTONS
         const lbContainer = document.getElementById('lb-buttons');
         lbContainer.innerHTML = `
             <button onclick="loadLeaderboard('net_worth')" class="btn-tab active">Net Worth</button>
@@ -397,15 +363,11 @@
             lbContainer.appendChild(btn);
         });
 
-        // ======================================================
-        // LOGIC & FUNCTIONS
-        // ======================================================
+        // --- 5. GAME LOGIC ---
         window.trade = (stock, type) => {
             const qtyInput = document.getElementById(`qty-${stock}`);
             const qty = parseInt(qtyInput.value);
-            if (!qty || qty <= 0 || qty % 500 !== 0) {
-                return alert("Quantity must be a multiple of 500.");
-            }
+            if (!qty || qty <= 0 || qty % 500 !== 0) return alert("Quantity must be a multiple of 500.");
             handleTrade(stock, type, qty);
         };
 
@@ -477,9 +439,7 @@
             } catch (e) { alert("Failed: " + e); }
         };
 
-        // --- REALTIME LISTENERS ---
-
-        // A. Market Prices
+        // --- 6. FIREBASE LISTENERS ---
         onSnapshot(doc(db, "game_state", "current_market"), (docSnap) => {
             if (docSnap.exists()) {
                 marketPrices = docSnap.data();
@@ -487,21 +447,15 @@
                     const price = marketPrices[s];
                     const el = document.getElementById(`price-${s}`);
                     el.innerText = price;
-                    
                     const safePrice = Math.min(Math.max(price, 0), 200); 
                     const hue = (safePrice / 200) * 120; 
                     el.style.color = `hsl(${hue}, 100%, 50%)`;
                 });
-
-                // Auto-refresh Net Worth (Safe due to caching)
                 const activeBtn = document.querySelector('.btn-tab.active');
-                if(activeBtn && activeBtn.innerText.includes("Net Worth")) {
-                    fetchLeaderboard('net_worth');
-                }
+                if(activeBtn && activeBtn.innerText.includes("Net Worth")) fetchLeaderboard('net_worth');
             }
         });
 
-        // B. Auth & Profile (SAFE TRANSACTION INIT)
         onAuthStateChanged(auth, async (user) => {
             currentUser = user;
             
@@ -532,7 +486,7 @@
                     if (docSnap.exists()) {
                         const data = docSnap.data();
                         userPortfolio = data; 
-                        isDataLoaded = true; // UNLOCK TRADING
+                        isDataLoaded = true; 
 
                         document.getElementById('user-cash').innerText = "$" + Math.floor(data.cash).toLocaleString();
                         if(data.name) document.getElementById('user-name').innerText = data.name;
@@ -542,7 +496,6 @@
                             document.getElementById(`owned-${s}`).innerText = count;
                         });
 
-                        // Bankruptcy Check
                         const totalShares = Object.values(data.stocks || {}).reduce((a, b) => a + b, 0);
                         const bankruptcyBtn = document.getElementById('bankruptcy-btn');
                         
@@ -713,7 +666,6 @@
                     const time = data.timestamp ? new Date(data.timestamp.toDate()).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : "--:--";
                     const color = data.message.includes("UP") ? "var(--green)" : (data.message.includes("DOWN") ? "var(--red)" : "var(--accent)");
                     
-                    // --- THEME TEXT REPLACEMENT ---
                     let displayMsg = data.message;
                     stocks.forEach(s => {
                         if(displayMsg.includes(s)) {
