@@ -5,119 +5,125 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Stock Ticker Live</title>
     <link rel="manifest" href="manifest.json">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Courier+Prime:wght@700&family=Inter:wght@600&family=Orbitron:wght@700&family=Press+Start+2P&family=Fredoka:wght@600&display=swap" rel="stylesheet">
+    
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        /* --- CSS VARIABLES --- */
+        /* --- CSS VARIABLES (Dynamic) --- */
         :root {
-            /* Dark Mode Defaults */
+            /* Default (Classic) */
             --bg: #121212;
             --card: #1e1e1e;
             --text: #e0e0e0;
             --text-muted: #888;
             --border: #333;
             --input-bg: #2a2a2a;
+            --font-main: 'Courier Prime', monospace;
+            --accent: #ffd700; /* Gold */
             
-            /* Brand Colors */
+            /* Status Colors */
             --green: #4caf50;
             --red: #ff5252;
-            --gold: #ffd700;
             --blue: #2196F3;
         }
 
-        /* Light Mode Overrides */
-        body.light-mode {
-            --bg: #f4f6f8;
-            --card: #ffffff;
-            --text: #212b36;
-            --text-muted: #637381;
-            --border: #dfe3e8;
-            --input-bg: #f9fafb;
+        body { 
+            font-family: var(--font-main); 
+            background: var(--bg); 
+            color: var(--text); 
+            margin: 0; padding: 15px; padding-bottom: 100px; 
+            transition: all 0.5s ease; 
         }
-
-        body { font-family: 'Courier New', monospace; background: var(--bg); color: var(--text); margin: 0; padding: 15px; padding-bottom: 100px; transition: background 0.3s, color 0.3s; }
         
-        h1 { text-align: center; color: var(--green); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px; font-size: 1.8rem; position: relative;}
+        /* HEADER STYLES */
+        h1 { text-align: center; color: var(--green); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px; font-size: 1.8rem; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
         h2, h3 { border-bottom: 1px solid var(--border); padding-bottom: 5px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;}
-        h2 { font-size: 1.2rem; margin-top: 30px; }
-        h3 { font-size: 0.9rem; margin-top: 0; }
 
-        /* Theme Toggle Btn */
-        #theme-toggle { position: absolute; top: 15px; right: 15px; background: none; border: 1px solid var(--border); color: var(--text); font-size: 1.2rem; cursor: pointer; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; z-index: 10; }
-        
-        /* Settings Btn */
-        #settings-btn { position: absolute; top: 15px; left: 15px; background: none; border: none; color: var(--text); font-size: 1.5rem; cursor: pointer; z-index: 10; padding: 0; }
+        /* UI CONTROLS */
+        #settings-btn { position: absolute; top: 15px; left: 15px; background: none; border: none; color: var(--text); font-size: 1.8rem; cursor: pointer; z-index: 10; padding: 0; transition: transform 0.2s; }
+        #settings-btn:hover { transform: rotate(90deg); }
 
-        /* Auth Section */
-        #auth-section { background: var(--card); padding: 15px; border-radius: 8px; border: 1px solid var(--border); text-align: center; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .cash-display { font-size: 1.5rem; color: var(--gold); font-weight: bold; margin: 10px 0; text-shadow: 1px 1px 0px rgba(0,0,0,0.2); }
+        /* AUTH CARD */
+        #auth-section { background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid var(--border); text-align: center; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+        .cash-display { font-size: 1.8rem; color: var(--accent); font-weight: bold; margin: 10px 0; text-shadow: 0 0 10px rgba(0,0,0,0.2); }
         
-        /* Buttons */
-        button { border: none; padding: 10px 15px; cursor: pointer; font-size: 0.9rem; border-radius: 4px; font-family: inherit; font-weight: bold; transition: opacity 0.2s; }
-        button:active { opacity: 0.7; }
+        /* BUTTONS */
+        button { border: none; padding: 12px 15px; cursor: pointer; font-size: 0.9rem; border-radius: 8px; font-family: inherit; font-weight: bold; transition: filter 0.2s, transform 0.1s; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        button:active { transform: scale(0.98); }
         .btn-login { background: var(--green); color: white; width: 100%; max-width: 250px; }
         .btn-logout { background: var(--border); color: var(--text-muted); font-size: 0.8rem; padding: 5px 10px; }
         .btn-buy { background: var(--blue); color: white; flex: 1; margin-right: 5px; }
         .btn-sell { background: var(--red); color: white; flex: 1; margin-left: 5px; }
-        .btn-tab { background: var(--border); color: var(--text-muted); margin: 2px; font-size: 0.75rem; }
-        .btn-tab.active { background: var(--gold); color: black; border: 1px solid var(--gold); }
-        .btn-edit { background: none; border: none; padding: 0 5px; cursor: pointer; font-size: 1rem; }
         
-        /* Bankruptcy Button */
-        .btn-bankrupt { background: #555; color: #ff5252; width: 100%; margin-bottom: 10px; border: 1px solid var(--red); }
-        .btn-bankrupt:disabled { opacity: 0.5; cursor: not-allowed; border-color: #555; color: #888; }
-
-        /* Dashboard (Charts) */
+        /* TABS */
+        .btn-tab { background: var(--card); border: 1px solid var(--border); color: var(--text-muted); margin: 3px; font-size: 0.75rem; }
+        .btn-tab.active { background: var(--accent); color: var(--bg); border-color: var(--accent); box-shadow: 0 0 8px var(--accent); }
+        
+        /* DASHBOARD */
         .dashboard-container { max-width: 800px; margin: 0 auto 20px auto; }
-        .dashboard-card { background: var(--card); padding: 10px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 15px; }
+        .dashboard-card { background: var(--card); padding: 10px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 15px; }
         
-        /* Market Grid */
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; }
-        .card { background: var(--card); padding: 15px; border: 1px solid var(--border); border-radius: 8px; text-align: center; position: relative; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .stock-name { font-size: 1.1rem; font-weight: bold; margin-bottom: 5px; color: var(--text); }
-        .stock-price { font-size: 2rem; font-weight: bold; transition: color 0.5s; margin: 5px 0; }
+        /* MARKET GRID */
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 15px; }
+        .card { 
+            background: var(--card); 
+            padding: 15px; 
+            border: 1px solid var(--border); 
+            border-radius: 12px; 
+            text-align: center; 
+            position: relative; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1); 
+            transition: transform 0.2s;
+        }
+        .card:hover { transform: translateY(-2px); }
+
+        .stock-emoji { font-size: 2.5rem; margin-bottom: 5px; display: block; }
+        .stock-name { font-size: 1.1rem; font-weight: bold; margin-bottom: 0; color: var(--text); }
+        .stock-price { font-size: 1.8rem; font-weight: bold; transition: color 0.5s; margin: 5px 0; font-family: monospace; }
         .stock-owned { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 10px; }
         .trade-actions { display: flex; justify-content: space-between; margin-top: 10px; }
 
-        /* Max Buttons */
-        .max-controls { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--blue); margin-bottom: 4px; padding: 0 5px; }
-        .max-btn { cursor: pointer; text-decoration: underline; }
-        .max-btn:hover { color: var(--gold); }
-
-        /* Input */
+        /* INPUTS */
+        .max-controls { display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--blue); margin-bottom: 4px; padding: 0 5px; }
+        .max-btn { cursor: pointer; text-decoration: underline; opacity: 0.8; }
+        .max-btn:hover { opacity: 1; color: var(--accent); }
         input[type="number"] { width: 100px; padding: 8px; text-align: center; background: var(--input-bg); color: var(--text); border: 1px solid var(--border); border-radius: 4px; font-family: inherit; font-weight: bold; font-size: 1rem; }
 
-        /* Leaderboard Table */
+        /* LEADERBOARD */
         table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
         th { text-align: left; color: var(--text-muted); padding: 8px; border-bottom: 1px solid var(--border); }
         td { padding: 10px 8px; border-bottom: 1px solid var(--border); color: var(--text); }
-        tr.is-me { background: rgba(76, 175, 80, 0.1); color: var(--green); font-weight: bold; }
+        tr.is-me { background: rgba(255, 215, 0, 0.1); color: var(--accent); font-weight: bold; border-left: 3px solid var(--accent); }
 
-        /* Settings Modal */
-        #settings-modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:1000; align-items:center; justify-content:center; }
-        .theme-grid { display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin: 20px 0; max-height: 50vh; overflow-y: auto; }
-        .btn-theme { padding:15px; border:1px solid var(--border); background:var(--bg); color:var(--text); text-align: left; border-radius: 8px; }
-        .btn-theme:hover { border-color: var(--gold); }
+        /* SETTINGS MODAL */
+        #settings-modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:1000; align-items:center; justify-content:center; backdrop-filter: blur(5px); }
+        .theme-grid { display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin: 20px 0; max-height: 60vh; overflow-y: auto; }
+        .btn-theme { padding:15px; border:1px solid var(--border); background:var(--bg); color:var(--text); text-align: left; border-radius: 8px; position: relative; overflow: hidden; }
+        .btn-theme:hover { border-color: var(--accent); transform: scale(1.02); }
+        .theme-preview { width: 20px; height: 20px; border-radius: 50%; display: inline-block; margin-right: 5px; vertical-align: middle; border: 1px solid white; }
     </style>
 </head>
 <body>
 
-    <button id="settings-btn" onclick="openSettings()">⚙️</button>
-    <button id="theme-toggle" onclick="toggleTheme()">☀</button>
+    <button id="settings-btn" onclick="openSettings()">🎨</button>
 
-    <h1>Stock Ticker</h1>
+    <h1 id="app-title">Stock Ticker</h1>
 
     <div id="settings-modal">
-        <div style="background:var(--card); padding:20px; border-radius:12px; width:90%; max-width:400px; border:1px solid var(--border);">
+        <div style="background:var(--card); padding:20px; border-radius:12px; width:90%; max-width:400px; border:1px solid var(--border); box-shadow: 0 0 20px rgba(0,0,0,0.5);">
             <div style="display:flex; justify-content:space-between; align-items:center;">
-                <h2 style="margin:0; border:none; color:var(--text);">Market Theme</h2>
-                <button onclick="closeSettings()" style="background:none; color:var(--text); font-size:1.5rem;">×</button>
+                <h2 style="margin:0; border:none; color:var(--text);">Visual Style</h2>
+                <button onclick="closeSettings()" style="background:none; color:var(--text); font-size:1.5rem; padding:0;">×</button>
             </div>
-            <p style="color:var(--text-muted); font-size:0.85rem; margin-top:5px;">Choose a visual skin. This does not affect gameplay or prices.</p>
+            <p style="color:var(--text-muted); font-size:0.85rem; margin-top:5px;">Select a theme to transform the game's look and feel.</p>
             
             <div class="theme-grid" id="theme-options">
                 </div>
 
-            <button onclick="closeSettings()" style="background:var(--blue); color:white; width:100%;">Close</button>
+            <button onclick="closeSettings()" style="background:var(--text); color:var(--bg); width:100%;">Close</button>
         </div>
     </div>
 
@@ -128,15 +134,15 @@
         </div>
 
         <div id="profile-view" style="display:none;">
-            <div style="color:var(--text-muted); font-size:0.8rem;">WALLET BALANCE</div>
+            <div style="color:var(--text-muted); font-size:0.8rem; letter-spacing: 1px;">NET WORTH</div>
             <div class="cash-display" id="user-cash">$0</div>
             
             <div style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 10px;">
                 Playing as: <strong id="user-name" style="color:var(--text)">Player</strong>
-                <button class="btn-edit" onclick="changeName()">✏️</button>
+                <button class="btn-edit" onclick="changeName()" style="background:none; border:none;">✏️</button>
             </div>
 
-            <button id="bankruptcy-btn" class="btn-bankrupt" style="display:none;" onclick="declareBankruptcy()">
+            <button id="bankruptcy-btn" class="btn-bankrupt" style="display:none; background:#333; color:#ff5252; border:1px solid #ff5252; width:100%; margin-bottom:10px;" onclick="declareBankruptcy()">
                 💀 DECLARE BANKRUPTCY
             </button>
 
@@ -151,7 +157,7 @@
             <canvas id="marketChart" height="200"></canvas>
         </div>
         <div class="dashboard-card">
-            <h3>Recent Market Activity</h3>
+            <h3 style="margin-top:5px;">Market Feed</h3>
             <ul id="activity-list" style="list-style: none; padding: 0; margin: 0; font-size: 0.85rem; color: var(--text-muted);">
                 <li style="text-align:center; padding:10px;">Waiting for market open...</li>
             </ul>
@@ -162,9 +168,9 @@
         </div>
 
     <div id="leaderboard-section">
-        <h2>🏆 Leaderboards</h2>
+        <h2 style="text-align:center; margin-top:40px;">Global Rankings</h2>
         
-        <div id="lb-buttons" style="display:flex; flex-wrap:wrap; justify-content:center; margin-bottom:10px;">
+        <div id="lb-buttons" style="display:flex; flex-wrap:wrap; justify-content:center; margin-bottom:15px;">
             </div>
 
         <table>
@@ -186,9 +192,6 @@
         import { getFirestore, doc, onSnapshot, runTransaction, setDoc, updateDoc, collection, query, orderBy, limit, getDocs, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
 
-        // ======================================================
-        // FIREBASE CONFIG
-        // ======================================================
         const firebaseConfig = {
           apiKey: "AIzaSyDZLaQkYIBjV-TKc3al9M97ALLwa3X2sKg",
           authDomain: "stock-ticker-game.firebaseapp.com",
@@ -205,49 +208,91 @@
         const provider = new GoogleAuthProvider();
         
         // ======================================================
-        // THEME & RESKIN ENGINE
+        // 🎨 THEME ENGINE (The Visual Overhaul)
         // ======================================================
         const stocks = ['Gold', 'Silver', 'Oil', 'Bonds', 'Industrial', 'Grain'];
 
         const THEMES = {
             'classic': {
-                name: 'Classic',
-                icon: '🪨',
-                map: { 'Gold': 'Gold', 'Silver': 'Silver', 'Oil': 'Oil', 'Bonds': 'Bonds', 'Industrial': 'Industrial', 'Grain': 'Grain' }
+                name: 'Wall Street',
+                desc: 'The original dark mode experience.',
+                css: {
+                    '--bg': '#121212', '--card': '#1e1e1e', '--text': '#e0e0e0', '--border': '#333',
+                    '--input-bg': '#2a2a2a', '--font-main': "'Courier Prime', monospace", '--accent': '#ffd700'
+                },
+                map: { 'Gold': {n:'Gold', e:'🏆'}, 'Silver': {n:'Silver', e:'🥈'}, 'Oil': {n:'Oil', e:'🛢️'}, 'Bonds': {n:'Bonds', e:'📜'}, 'Industrial': {n:'Industrial', e:'🏭'}, 'Grain': {n:'Grain', e:'🌾'} }
             },
             'tech': {
-                name: 'Big Tech',
-                icon: '💻',
-                map: { 'Gold': 'Nvidia', 'Silver': 'Starlink', 'Oil': 'Tesla', 'Bonds': 'Microsoft', 'Industrial': 'Amazon', 'Grain': 'Google' }
-            },
-            'crypto': {
-                name: 'Crypto',
-                icon: '🚀',
-                map: { 'Gold': 'Bitcoin', 'Silver': 'Ethereum', 'Oil': 'Solana', 'Bonds': 'USDC', 'Industrial': 'Doge', 'Grain': 'XRP' }
-            },
-            'fantasy': {
-                name: 'Fantasy',
-                icon: '🐉',
-                map: { 'Gold': 'Dragon Scale', 'Silver': 'Mithril', 'Oil': 'Elixir', 'Bonds': 'War Bonds', 'Industrial': 'Iron', 'Grain': 'Wheat' }
+                name: 'Silicon Valley',
+                desc: 'Clean, modern, and high-tech.',
+                css: {
+                    '--bg': '#f0f2f5', '--card': '#ffffff', '--text': '#1c1e21', '--border': '#ddd',
+                    '--input-bg': '#e4e6eb', '--font-main': "'Inter', sans-serif", '--accent': '#1877f2'
+                },
+                map: { 'Gold': {n:'Nvidia', e:'📼'}, 'Silver': {n:'Starlink', e:'📡'}, 'Oil': {n:'Tesla', e:'🔋'}, 'Bonds': {n:'Microsoft', e:'💾'}, 'Industrial': {n:'Amazon', e:'📦'}, 'Grain': {n:'Google', e:'🔎'} }
             },
             'cyberpunk': {
-                name: 'Cyberpunk',
-                icon: '🤖',
-                map: { 'Gold': 'Neon Gas', 'Silver': 'Neural Chip', 'Oil': 'Bio-Fuel', 'Bonds': 'Credits', 'Industrial': 'Drones', 'Grain': 'Nutri-Paste' }
+                name: 'Night City',
+                desc: 'Neon lights and glitch text.',
+                css: {
+                    '--bg': '#050505', '--card': '#0a0a0a', '--text': '#00ff99', '--border': '#00ff99',
+                    '--input-bg': '#000', '--font-main': "'Orbitron', sans-serif", '--accent': '#ff00ff'
+                },
+                map: { 'Gold': {n:'Neon Gas', e:'🧪'}, 'Silver': {n:'Neural Link', e:'🧠'}, 'Oil': {n:'Bio-Fuel', e:'🟢'}, 'Bonds': {n:'Credits', e:'💳'}, 'Industrial': {n:'Drones', e:'🛸'}, 'Grain': {n:'Paste', e:'🍱'} }
             },
-            'foodie': {
-                name: 'Gourmet',
-                icon: '🍔',
-                map: { 'Gold': 'Truffles', 'Silver': 'Saffron', 'Oil': 'Olive Oil', 'Bonds': 'Treasury', 'Industrial': 'Wagyu', 'Grain': 'Rice' }
+            'fantasy': {
+                name: 'Kingdoms',
+                desc: 'Old parchment and medieval vibes.',
+                css: {
+                    '--bg': '#2c241b', '--card': '#3e3226', '--text': '#e0d4b8', '--border': '#8a6a4b',
+                    '--input-bg': '#261f18', '--font-main': "'Cinzel', serif", '--accent': '#ffb74d'
+                },
+                map: { 'Gold': {n:'Dragon Scale', e:'🐉'}, 'Silver': {n:'Mithril', e:'⚔️'}, 'Oil': {n:'Elixir', e:'🧪'}, 'Bonds': {n:'Decrees', e:'📜'}, 'Industrial': {n:'Iron', e:'🛡️'}, 'Grain': {n:'Wheat', e:'🍞'} }
+            },
+            'crypto': {
+                name: 'Crypto Bro',
+                desc: 'To the moon! 🚀',
+                css: {
+                    '--bg': '#1a1a2e', '--card': '#16213e', '--text': '#e94560', '--border': '#0f3460',
+                    '--input-bg': '#0f3460', '--font-main': "'Fredoka', sans-serif", '--accent': '#4caf50'
+                },
+                map: { 'Gold': {n:'Bitcoin', e:'₿'}, 'Silver': {n:'Ethereum', e:'Ξ'}, 'Oil': {n:'Solana', e:'◎'}, 'Bonds': {n:'USDC', e:'💲'}, 'Industrial': {n:'Doge', e:'🐕'}, 'Grain': {n:'Pepe', e:'🐸'} }
+            },
+             'retro': {
+                name: '8-Bit Arcade',
+                desc: 'Insert Coin to Start.',
+                css: {
+                    '--bg': '#2b2b2b', '--card': '#444', '--text': '#bada55', '--border': '#000',
+                    '--input-bg': '#222', '--font-main': "'Press Start 2P', cursive", '--accent': '#ff0055'
+                },
+                map: { 'Gold': {n:'1-Up', e:'🍄'}, 'Silver': {n:'Coin', e:'🪙'}, 'Oil': {n:'Star', e:'⭐'}, 'Bonds': {n:'Sword', e:'🗡️'}, 'Industrial': {n:'Brick', e:'🧱'}, 'Grain': {n:'Heart', e:'❤️'} }
             }
         };
 
+        // Load Theme
         let currentThemeKey = localStorage.getItem('market_theme') || 'classic';
-        if(!THEMES[currentThemeKey]) currentThemeKey = 'classic'; // Safety fallback
-        let currentMapping = THEMES[currentThemeKey].map;
+        if(!THEMES[currentThemeKey]) currentThemeKey = 'classic';
+        
+        function applyTheme(key) {
+            const t = THEMES[key];
+            const root = document.documentElement;
+            
+            // 1. Inject CSS Variables
+            Object.keys(t.css).forEach(prop => {
+                root.style.setProperty(prop, t.css[prop]);
+            });
 
-        function getDisplayName(dbName) {
-            return currentMapping[dbName] || dbName;
+            // 2. Save Preference
+            localStorage.setItem('market_theme', key);
+            currentThemeKey = key;
+        }
+
+        // Apply immediately on load
+        applyTheme(currentThemeKey);
+
+        // Helper to get visual info
+        function getDisplayInfo(dbName) {
+            return THEMES[currentThemeKey].map[dbName] || {n: dbName, e: ''};
         }
 
         // --- THEME SETTINGS FUNCTIONS ---
@@ -255,7 +300,7 @@
         window.closeSettings = () => document.getElementById('settings-modal').style.display = 'none';
         
         window.setTheme = (key) => {
-            localStorage.setItem('market_theme', key);
+            applyTheme(key);
             location.reload(); 
         };
 
@@ -265,12 +310,12 @@
             const t = THEMES[key];
             const btn = document.createElement('button');
             btn.className = 'btn-theme';
-            if(key === currentThemeKey) btn.style.borderColor = 'var(--green)';
+            if(key === currentThemeKey) btn.style.border = '2px solid var(--accent)';
             
-            // Preview the mapping for the user
-            const preview = `${t.map['Gold']}, ${t.map['Silver']}...`;
+            // Color circle preview
+            const circle = `<span class="theme-preview" style="background:${t.css['--bg']}"></span>`;
             
-            btn.innerHTML = `${t.icon} <b>${t.name}</b><br><span style="font-size:0.75em; color:var(--text-muted)">${preview}</span>`;
+            btn.innerHTML = `${circle} <b>${t.name}</b><br><span style="font-size:0.75em; color:var(--text-muted)">${t.desc}</span>`;
             btn.onclick = () => window.setTheme(key);
             themeContainer.appendChild(btn);
         });
@@ -283,38 +328,24 @@
         let userPortfolio = { cash: 0, stocks: {} }; 
         let myChart = null;
         let lastChartData = [];
-        
-        // --- SAFETY VARIABLES ---
         let isDataLoaded = false; 
         let cachedLeaderboardData = null; 
         let lastFetchTime = 0; 
-
-        // --- DARK/LIGHT MODE ---
-        window.toggleTheme = () => {
-            document.body.classList.toggle('light-mode');
-            const isLight = document.body.classList.contains('light-mode');
-            localStorage.setItem('theme', isLight ? 'light' : 'dark');
-            document.getElementById('theme-toggle').innerText = isLight ? '🌙' : '☀';
-            if (lastChartData.length > 0) updateChart(lastChartData);
-        };
-        if (localStorage.getItem('theme') === 'light') {
-            document.body.classList.add('light-mode');
-            document.getElementById('theme-toggle').innerText = '🌙';
-        }
 
         // ======================================================
         // INIT UI GENERATION
         // ======================================================
         
-        // 1. Generate Market Cards (Using Display Names)
+        // 1. Generate Market Cards (Now with Emojis!)
         const grid = document.getElementById('market-grid');
         stocks.forEach(stock => {
-            const displayName = getDisplayName(stock);
+            const info = getDisplayInfo(stock);
             
             const card = document.createElement('div');
             card.className = 'card';
             card.innerHTML = `
-                <div class="stock-name">${displayName}</div>
+                <span class="stock-emoji">${info.e}</span>
+                <div class="stock-name">${info.n}</div>
                 <div class="stock-price" id="price-${stock}">--</div>
                 <div class="stock-owned">Owned: <span id="owned-${stock}">0</span></div>
                 
@@ -335,16 +366,17 @@
             grid.appendChild(card);
         });
 
-        // 2. Generate Leaderboard Buttons (Using Display Names)
+        // 2. Generate Leaderboard Buttons
         const lbContainer = document.getElementById('lb-buttons');
         lbContainer.innerHTML = `
             <button onclick="loadLeaderboard('net_worth')" class="btn-tab active">Net Worth</button>
             <button onclick="loadLeaderboard('cash')" class="btn-tab">Cash</button>
         `;
         stocks.forEach(s => {
+            const info = getDisplayInfo(s);
             const btn = document.createElement('button');
             btn.className = 'btn-tab';
-            btn.innerText = getDisplayName(s);
+            btn.innerHTML = `${info.e} ${info.n}`;
             btn.onclick = () => loadLeaderboard(`stocks.${s}`);
             lbContainer.appendChild(btn);
         });
@@ -609,7 +641,8 @@
                     players.sort((a, b) => b.cash - a.cash);
                 } 
                 else if (isStock) {
-                    header.innerText = `${getDisplayName(sortKey)} Shares`; // Theme aware header
+                    const info = getDisplayInfo(sortKey);
+                    header.innerText = `${info.e} ${info.n}`;
                     players.sort((a, b) => {
                         const valA = (a.stocks && a.stocks[sortKey]) || 0; 
                         const valB = (b.stocks && b.stocks[sortKey]) || 0;
@@ -662,11 +695,21 @@
                 listEl.innerHTML = "";
                 docs.forEach(data => {
                     const time = data.timestamp ? new Date(data.timestamp.toDate()).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : "--:--";
-                    const color = data.message.includes("UP") ? "#4caf50" : (data.message.includes("DOWN") ? "#ff5252" : "#ffd700");
+                    const color = data.message.includes("UP") ? "var(--green)" : (data.message.includes("DOWN") ? "var(--red)" : "var(--accent)");
+                    
+                    // --- THEME TEXT REPLACEMENT ---
+                    let displayMsg = data.message;
+                    stocks.forEach(s => {
+                        if(displayMsg.includes(s)) {
+                            const info = getDisplayInfo(s);
+                            displayMsg = displayMsg.replace(s, `${info.e} ${info.n}`);
+                        }
+                    });
+
                     const li = document.createElement('li');
                     li.style.padding = "8px 0";
                     li.style.borderBottom = "1px solid var(--border)";
-                    li.innerHTML = `<span style="color:var(--text-muted); margin-right:10px; font-size:0.8em;">${time}</span><span style="color:${color}; font-weight:bold;">${data.message}</span>`;
+                    li.innerHTML = `<span style="color:var(--text-muted); margin-right:10px; font-size:0.8em;">${time}</span><span style="color:${color}; font-weight:bold;">${displayMsg}</span>`;
                     listEl.appendChild(li);
                 });
 
@@ -680,13 +723,10 @@
 
         function updateChart(data) {
             const ctx = document.getElementById('marketChart').getContext('2d');
-            const isLight = document.body.classList.contains('light-mode');
-            const gridColor = isLight ? '#dfe3e8' : '#333';
-            const textColor = isLight ? '#637381' : '#888';
-
+            
             const labels = data.map(d => d.timestamp ? new Date(d.timestamp.toDate()).toLocaleTimeString([], {hour: '2-digit'}) : "");
             const datasets = stocks.map(stock => ({
-                label: getDisplayName(stock), // THEME AWARE LABEL
+                label: getDisplayInfo(stock).n, 
                 data: data.map(d => d.snapshot[stock] || 100),
                 borderColor: getStockColor(stock),
                 borderWidth: 2,
@@ -703,17 +743,17 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     scales: {
-                        y: { beginAtZero: true, max: 200, grid: { color: gridColor }, ticks: { color: textColor } },
-                        x: { grid: { display: false }, ticks: { color: textColor } }
+                        y: { beginAtZero: true, max: 200, grid: { color: 'rgba(128,128,128,0.2)' }, ticks: { color: 'gray' } },
+                        x: { grid: { display: false }, ticks: { color: 'gray' } }
                     },
-                    plugins: { legend: { labels: { color: textColor } } }
+                    plugins: { legend: { labels: { color: 'gray' } } }
                 }
             });
         }
 
         function getStockColor(stock) {
             const colors = { 'Gold': '#ffd700', 'Silver': '#c0c0c0', 'Oil': '#888888', 'Bonds': '#4caf50', 'Industrial': '#ff9800', 'Grain': '#e91e63' };
-            if(stock === 'Oil' && document.body.classList.contains('light-mode')) return '#333';
+            // Adjust for light mode visibility if needed, but keeping simple for now
             return colors[stock] || '#fff';
         }
 
