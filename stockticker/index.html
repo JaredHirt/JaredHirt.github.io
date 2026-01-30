@@ -12,9 +12,8 @@
     
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        /* --- CSS VARIABLES (Dynamic) --- */
+        /* --- BASE VARIABLES (Set by JS) --- */
         :root {
-            /* Default (Classic) */
             --bg: #121212;
             --card: #1e1e1e;
             --text: #e0e0e0;
@@ -22,9 +21,7 @@
             --border: #333;
             --input-bg: #2a2a2a;
             --font-main: 'Courier Prime', monospace;
-            --accent: #ffd700; /* Gold */
-            
-            /* Status Colors */
+            --accent: #ffd700;
             --green: #4caf50;
             --red: #ff5252;
             --blue: #2196F3;
@@ -35,23 +32,25 @@
             background: var(--bg); 
             color: var(--text); 
             margin: 0; padding: 15px; padding-bottom: 100px; 
-            transition: all 0.5s ease; 
+            transition: background 0.4s ease, color 0.4s ease; 
         }
         
-        /* HEADER STYLES */
-        h1 { text-align: center; color: var(--green); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px; font-size: 1.8rem; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+        h1 { text-align: center; color: var(--green); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px; font-size: 1.8rem; text-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         h2, h3 { border-bottom: 1px solid var(--border); padding-bottom: 5px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;}
 
         /* UI CONTROLS */
         #settings-btn { position: absolute; top: 15px; left: 15px; background: none; border: none; color: var(--text); font-size: 1.8rem; cursor: pointer; z-index: 10; padding: 0; transition: transform 0.2s; }
         #settings-btn:hover { transform: rotate(90deg); }
+        
+        #theme-toggle { position: absolute; top: 15px; right: 15px; background: none; border: none; color: var(--text); font-size: 1.5rem; cursor: pointer; z-index: 10; transition: transform 0.2s; }
+        #theme-toggle:hover { transform: scale(1.2); }
 
         /* AUTH CARD */
-        #auth-section { background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid var(--border); text-align: center; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
-        .cash-display { font-size: 1.8rem; color: var(--accent); font-weight: bold; margin: 10px 0; text-shadow: 0 0 10px rgba(0,0,0,0.2); }
+        #auth-section { background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid var(--border); text-align: center; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .cash-display { font-size: 1.8rem; color: var(--accent); font-weight: bold; margin: 10px 0; }
         
         /* BUTTONS */
-        button { border: none; padding: 12px 15px; cursor: pointer; font-size: 0.9rem; border-radius: 8px; font-family: inherit; font-weight: bold; transition: filter 0.2s, transform 0.1s; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        button { border: none; padding: 12px 15px; cursor: pointer; font-size: 0.9rem; border-radius: 8px; font-family: inherit; font-weight: bold; transition: filter 0.2s, transform 0.1s; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         button:active { transform: scale(0.98); }
         .btn-login { background: var(--green); color: white; width: 100%; max-width: 250px; }
         .btn-logout { background: var(--border); color: var(--text-muted); font-size: 0.8rem; padding: 5px 10px; }
@@ -60,7 +59,7 @@
         
         /* TABS */
         .btn-tab { background: var(--card); border: 1px solid var(--border); color: var(--text-muted); margin: 3px; font-size: 0.75rem; }
-        .btn-tab.active { background: var(--accent); color: var(--bg); border-color: var(--accent); box-shadow: 0 0 8px var(--accent); }
+        .btn-tab.active { background: var(--accent); color: var(--bg); border-color: var(--accent); font-weight: bold; }
         
         /* DASHBOARD */
         .dashboard-container { max-width: 800px; margin: 0 auto 20px auto; }
@@ -75,10 +74,10 @@
             border-radius: 12px; 
             text-align: center; 
             position: relative; 
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1); 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05); 
             transition: transform 0.2s;
         }
-        .card:hover { transform: translateY(-2px); }
+        .card:hover { transform: translateY(-2px); border-color: var(--accent); }
 
         .stock-emoji { font-size: 2.5rem; margin-bottom: 5px; display: block; }
         .stock-name { font-size: 1.1rem; font-weight: bold; margin-bottom: 0; color: var(--text); }
@@ -96,19 +95,20 @@
         table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
         th { text-align: left; color: var(--text-muted); padding: 8px; border-bottom: 1px solid var(--border); }
         td { padding: 10px 8px; border-bottom: 1px solid var(--border); color: var(--text); }
-        tr.is-me { background: rgba(255, 215, 0, 0.1); color: var(--accent); font-weight: bold; border-left: 3px solid var(--accent); }
+        tr.is-me { background: rgba(128, 128, 128, 0.1); color: var(--accent); font-weight: bold; border-left: 3px solid var(--accent); }
 
         /* SETTINGS MODAL */
         #settings-modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:1000; align-items:center; justify-content:center; backdrop-filter: blur(5px); }
         .theme-grid { display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin: 20px 0; max-height: 60vh; overflow-y: auto; }
         .btn-theme { padding:15px; border:1px solid var(--border); background:var(--bg); color:var(--text); text-align: left; border-radius: 8px; position: relative; overflow: hidden; }
         .btn-theme:hover { border-color: var(--accent); transform: scale(1.02); }
-        .theme-preview { width: 20px; height: 20px; border-radius: 50%; display: inline-block; margin-right: 5px; vertical-align: middle; border: 1px solid white; }
+        .theme-preview { width: 20px; height: 20px; border-radius: 50%; display: inline-block; margin-right: 5px; vertical-align: middle; border: 1px solid var(--text); }
     </style>
 </head>
 <body>
 
     <button id="settings-btn" onclick="openSettings()">🎨</button>
+    <button id="theme-toggle" onclick="toggleDarkMode()">☀</button>
 
     <h1 id="app-title">Stock Ticker</h1>
 
@@ -118,7 +118,7 @@
                 <h2 style="margin:0; border:none; color:var(--text);">Visual Style</h2>
                 <button onclick="closeSettings()" style="background:none; color:var(--text); font-size:1.5rem; padding:0;">×</button>
             </div>
-            <p style="color:var(--text-muted); font-size:0.85rem; margin-top:5px;">Select a theme to transform the game's look and feel.</p>
+            <p style="color:var(--text-muted); font-size:0.85rem; margin-top:5px;">Select a theme. Each theme has a Light and Dark mode.</p>
             
             <div class="theme-grid" id="theme-options">
                 </div>
@@ -208,103 +208,119 @@
         const provider = new GoogleAuthProvider();
         
         // ======================================================
-        // 🎨 THEME ENGINE (The Visual Overhaul)
+        // 🎨 DUAL-MODE THEME ENGINE
         // ======================================================
         const stocks = ['Gold', 'Silver', 'Oil', 'Bonds', 'Industrial', 'Grain'];
 
         const THEMES = {
             'classic': {
                 name: 'Wall Street',
-                desc: 'The original dark mode experience.',
+                desc: 'The original terminal look.',
                 css: {
-                    '--bg': '#121212', '--card': '#1e1e1e', '--text': '#e0e0e0', '--border': '#333',
-                    '--input-bg': '#2a2a2a', '--font-main': "'Courier Prime', monospace", '--accent': '#ffd700'
+                    dark: { '--bg': '#121212', '--card': '#1e1e1e', '--text': '#e0e0e0', '--border': '#333', '--input-bg': '#2a2a2a', '--font-main': "'Courier Prime', monospace", '--accent': '#ffd700', '--chart-grid': '#333' },
+                    light: { '--bg': '#f4f6f8', '--card': '#ffffff', '--text': '#212b36', '--border': '#dfe3e8', '--input-bg': '#f9fafb', '--font-main': "'Courier Prime', monospace", '--accent': '#0066cc', '--chart-grid': '#ddd' }
                 },
                 map: { 'Gold': {n:'Gold', e:'🏆'}, 'Silver': {n:'Silver', e:'🥈'}, 'Oil': {n:'Oil', e:'🛢️'}, 'Bonds': {n:'Bonds', e:'📜'}, 'Industrial': {n:'Industrial', e:'🏭'}, 'Grain': {n:'Grain', e:'🌾'} }
             },
             'tech': {
                 name: 'Silicon Valley',
-                desc: 'Clean, modern, and high-tech.',
+                desc: 'Clean, modern, corporate.',
                 css: {
-                    '--bg': '#f0f2f5', '--card': '#ffffff', '--text': '#1c1e21', '--border': '#ddd',
-                    '--input-bg': '#e4e6eb', '--font-main': "'Inter', sans-serif", '--accent': '#1877f2'
+                    dark: { '--bg': '#0d1117', '--card': '#161b22', '--text': '#c9d1d9', '--border': '#30363d', '--input-bg': '#21262d', '--font-main': "'Inter', sans-serif", '--accent': '#58a6ff', '--chart-grid': '#30363d' },
+                    light: { '--bg': '#ffffff', '--card': '#f6f8fa', '--text': '#24292f', '--border': '#d0d7de', '--input-bg': '#ffffff', '--font-main': "'Inter', sans-serif", '--accent': '#0969da', '--chart-grid': '#eaeaea' }
                 },
                 map: { 'Gold': {n:'Nvidia', e:'📼'}, 'Silver': {n:'Starlink', e:'📡'}, 'Oil': {n:'Tesla', e:'🔋'}, 'Bonds': {n:'Microsoft', e:'💾'}, 'Industrial': {n:'Amazon', e:'📦'}, 'Grain': {n:'Google', e:'🔎'} }
             },
             'cyberpunk': {
                 name: 'Night City',
-                desc: 'Neon lights and glitch text.',
+                desc: 'High contrast sci-fi.',
                 css: {
-                    '--bg': '#050505', '--card': '#0a0a0a', '--text': '#00ff99', '--border': '#00ff99',
-                    '--input-bg': '#000', '--font-main': "'Orbitron', sans-serif", '--accent': '#ff00ff'
+                    dark: { '--bg': '#050505', '--card': '#0a0a0a', '--text': '#00ff99', '--border': '#00ff99', '--input-bg': '#000', '--font-main': "'Orbitron', sans-serif", '--accent': '#ff00ff', '--chart-grid': '#003300' },
+                    light: { '--bg': '#e0e0e0', '--card': '#ffffff', '--text': '#000000', '--border': '#ff00ff', '--input-bg': '#f0f0f0', '--font-main': "'Orbitron', sans-serif", '--accent': '#00b36b', '--chart-grid': '#ccc' }
                 },
                 map: { 'Gold': {n:'Neon Gas', e:'🧪'}, 'Silver': {n:'Neural Link', e:'🧠'}, 'Oil': {n:'Bio-Fuel', e:'🟢'}, 'Bonds': {n:'Credits', e:'💳'}, 'Industrial': {n:'Drones', e:'🛸'}, 'Grain': {n:'Paste', e:'🍱'} }
             },
             'fantasy': {
                 name: 'Kingdoms',
-                desc: 'Old parchment and medieval vibes.',
+                desc: 'Old parchment and wood.',
                 css: {
-                    '--bg': '#2c241b', '--card': '#3e3226', '--text': '#e0d4b8', '--border': '#8a6a4b',
-                    '--input-bg': '#261f18', '--font-main': "'Cinzel', serif", '--accent': '#ffb74d'
+                    dark: { '--bg': '#2c241b', '--card': '#3e3226', '--text': '#e0d4b8', '--border': '#8a6a4b', '--input-bg': '#261f18', '--font-main': "'Cinzel', serif", '--accent': '#ffb74d', '--chart-grid': '#5c4d3c' },
+                    light: { '--bg': '#f3e5ab', '--card': '#fffbf0', '--text': '#4a3b2a', '--border': '#d4c5a3', '--input-bg': '#fff8e1', '--font-main': "'Cinzel', serif", '--accent': '#8a6a4b', '--chart-grid': '#d4c5a3' }
                 },
                 map: { 'Gold': {n:'Dragon Scale', e:'🐉'}, 'Silver': {n:'Mithril', e:'⚔️'}, 'Oil': {n:'Elixir', e:'🧪'}, 'Bonds': {n:'Decrees', e:'📜'}, 'Industrial': {n:'Iron', e:'🛡️'}, 'Grain': {n:'Wheat', e:'🍞'} }
             },
             'crypto': {
                 name: 'Crypto Bro',
-                desc: 'To the moon! 🚀',
+                desc: 'Modern financial apps.',
                 css: {
-                    '--bg': '#1a1a2e', '--card': '#16213e', '--text': '#e94560', '--border': '#0f3460',
-                    '--input-bg': '#0f3460', '--font-main': "'Fredoka', sans-serif", '--accent': '#4caf50'
+                    dark: { '--bg': '#1a1a2e', '--card': '#16213e', '--text': '#e94560', '--border': '#0f3460', '--input-bg': '#0f3460', '--font-main': "'Fredoka', sans-serif", '--accent': '#4caf50', '--chart-grid': '#2a2a4e' },
+                    light: { '--bg': '#f0f5ff', '--card': '#ffffff', '--text': '#1a1a2e', '--border': '#cddeff', '--input-bg': '#f8faff', '--font-main': "'Fredoka', sans-serif", '--accent': '#e94560', '--chart-grid': '#e0eaff' }
                 },
                 map: { 'Gold': {n:'Bitcoin', e:'₿'}, 'Silver': {n:'Ethereum', e:'Ξ'}, 'Oil': {n:'Solana', e:'◎'}, 'Bonds': {n:'USDC', e:'💲'}, 'Industrial': {n:'Doge', e:'🐕'}, 'Grain': {n:'Pepe', e:'🐸'} }
             },
              'retro': {
                 name: '8-Bit Arcade',
-                desc: 'Insert Coin to Start.',
+                desc: 'Retro game console.',
                 css: {
-                    '--bg': '#2b2b2b', '--card': '#444', '--text': '#bada55', '--border': '#000',
-                    '--input-bg': '#222', '--font-main': "'Press Start 2P', cursive", '--accent': '#ff0055'
+                    dark: { '--bg': '#2b2b2b', '--card': '#444', '--text': '#bada55', '--border': '#000', '--input-bg': '#222', '--font-main': "'Press Start 2P', cursive", '--accent': '#ff0055', '--chart-grid': '#555' },
+                    light: { '--bg': '#9bbc0f', '--card': '#8bac0f', '--text': '#0f380f', '--border': '#0f380f', '--input-bg': '#9bbc0f', '--font-main': "'Press Start 2P', cursive", '--accent': '#306230', '--chart-grid': '#8bac0f' }
                 },
                 map: { 'Gold': {n:'1-Up', e:'🍄'}, 'Silver': {n:'Coin', e:'🪙'}, 'Oil': {n:'Star', e:'⭐'}, 'Bonds': {n:'Sword', e:'🗡️'}, 'Industrial': {n:'Brick', e:'🧱'}, 'Grain': {n:'Heart', e:'❤️'} }
             }
         };
 
-        // Load Theme
+        // LOAD SETTINGS
         let currentThemeKey = localStorage.getItem('market_theme') || 'classic';
+        let isDarkMode = localStorage.getItem('theme_mode') !== 'light'; // Default to dark
+
         if(!THEMES[currentThemeKey]) currentThemeKey = 'classic';
         
-        function applyTheme(key) {
-            const t = THEMES[key];
+        function applyVisuals() {
+            const t = THEMES[currentThemeKey];
+            const mode = isDarkMode ? 'dark' : 'light';
             const root = document.documentElement;
             
             // 1. Inject CSS Variables
-            Object.keys(t.css).forEach(prop => {
-                root.style.setProperty(prop, t.css[prop]);
+            const palette = t.css[mode];
+            Object.keys(palette).forEach(prop => {
+                root.style.setProperty(prop, palette[prop]);
             });
 
-            // 2. Save Preference
-            localStorage.setItem('market_theme', key);
-            currentThemeKey = key;
+            // 2. Update Toggle Icon
+            document.getElementById('theme-toggle').innerText = isDarkMode ? '🌙' : '☀';
+
+            // 3. Save Preference
+            localStorage.setItem('market_theme', currentThemeKey);
+            localStorage.setItem('theme_mode', isDarkMode ? 'dark' : 'light');
+
+            // 4. Redraw Chart (to update grid colors)
+            if(lastChartData.length > 0) updateChart(lastChartData);
         }
 
-        // Apply immediately on load
-        applyTheme(currentThemeKey);
+        // Apply immediately
+        applyVisuals();
 
-        // Helper to get visual info
         function getDisplayInfo(dbName) {
             return THEMES[currentThemeKey].map[dbName] || {n: dbName, e: ''};
         }
 
-        // --- THEME SETTINGS FUNCTIONS ---
+        // --- SETTINGS UI ---
         window.openSettings = () => document.getElementById('settings-modal').style.display = 'flex';
         window.closeSettings = () => document.getElementById('settings-modal').style.display = 'none';
         
         window.setTheme = (key) => {
-            applyTheme(key);
+            currentThemeKey = key;
+            applyVisuals();
+            // Need to reload to update Text Maps everywhere easily
             location.reload(); 
         };
 
-        // Generate Theme Buttons in Modal
+        window.toggleDarkMode = () => {
+            isDarkMode = !isDarkMode;
+            applyVisuals();
+        };
+
+        // Generate Theme Buttons
         const themeContainer = document.getElementById('theme-options');
         Object.keys(THEMES).forEach(key => {
             const t = THEMES[key];
@@ -312,8 +328,8 @@
             btn.className = 'btn-theme';
             if(key === currentThemeKey) btn.style.border = '2px solid var(--accent)';
             
-            // Color circle preview
-            const circle = `<span class="theme-preview" style="background:${t.css['--bg']}"></span>`;
+            // Preview Circle (uses the theme's dark bg)
+            const circle = `<span class="theme-preview" style="background:${t.css.dark['--bg']}"></span>`;
             
             btn.innerHTML = `${circle} <b>${t.name}</b><br><span style="font-size:0.75em; color:var(--text-muted)">${t.desc}</span>`;
             btn.onclick = () => window.setTheme(key);
@@ -336,7 +352,7 @@
         // INIT UI GENERATION
         // ======================================================
         
-        // 1. Generate Market Cards (Now with Emojis!)
+        // 1. Generate Market Cards
         const grid = document.getElementById('market-grid');
         stocks.forEach(stock => {
             const info = getDisplayInfo(stock);
@@ -723,7 +739,9 @@
 
         function updateChart(data) {
             const ctx = document.getElementById('marketChart').getContext('2d');
-            
+            const gridColor = getComputedStyle(document.documentElement).getPropertyValue('--chart-grid').trim();
+            const textColor = getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim();
+
             const labels = data.map(d => d.timestamp ? new Date(d.timestamp.toDate()).toLocaleTimeString([], {hour: '2-digit'}) : "");
             const datasets = stocks.map(stock => ({
                 label: getDisplayInfo(stock).n, 
@@ -743,17 +761,16 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     scales: {
-                        y: { beginAtZero: true, max: 200, grid: { color: 'rgba(128,128,128,0.2)' }, ticks: { color: 'gray' } },
-                        x: { grid: { display: false }, ticks: { color: 'gray' } }
+                        y: { beginAtZero: true, max: 200, grid: { color: gridColor }, ticks: { color: textColor } },
+                        x: { grid: { display: false }, ticks: { color: textColor } }
                     },
-                    plugins: { legend: { labels: { color: 'gray' } } }
+                    plugins: { legend: { labels: { color: textColor } } }
                 }
             });
         }
 
         function getStockColor(stock) {
             const colors = { 'Gold': '#ffd700', 'Silver': '#c0c0c0', 'Oil': '#888888', 'Bonds': '#4caf50', 'Industrial': '#ff9800', 'Grain': '#e91e63' };
-            // Adjust for light mode visibility if needed, but keeping simple for now
             return colors[stock] || '#fff';
         }
 
