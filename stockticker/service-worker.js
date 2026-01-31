@@ -1,9 +1,9 @@
 const CACHE_NAME = 'stock-ticker-v1';
 const urlsToCache = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/icon.png'
+  './',
+  './index.html',
+  './manifest.json',
+  './icon.png'
   // Add any other CSS or JS files you have here, e.g., '/style.css'
 ];
 
