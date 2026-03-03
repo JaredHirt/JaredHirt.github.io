@@ -1,367 +1,422 @@
 <!DOCTYPE html>
-<html>
-    <title>
-        Jared Hirt's Website
-    </title>
+<html lang="en">
     <head>
+        <meta charset="UTF-8">
+        <title>Jared Hirt's Website</title>
         <link rel="stylesheet" href="mystyle.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        
-        
     </head>
 
-    
-
-  
-
-    
-
     <body>
-
-
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-
         <div class="topnav">
             <a href="" class="active">Home</a>
-        <div id="myLinks">
+            <div id="myLinks">
+                <a href="#ResearchInterests" onclick="myFunction()">Research Interests</a>
+                <a href="#Education" onclick="myFunction()">Education</a>
+                <a href="#Publications" onclick="myFunction()">Publications</a>
+                <a href="#ResearchProjects" onclick="myFunction()">Research & Technical Projects</a>
+                <a href="#TeachingLeadership" onclick="myFunction()">Teaching & Leadership</a>
+                <a href="#ProfessionalExperience" onclick="myFunction()">Professional Experience</a>
+                <a href="#TechnicalSkills" onclick="myFunction()">Technical Skills</a>
+                <a href="#AwardsandScholarships" onclick="myFunction()">Awards and Scholarships</a>
+                <a href="#Service" onclick="myFunction()">Service</a>
+                <a href="#Hobbies" onclick="myFunction()">Hobbies</a>
+            </div>
+            <a href="javascript:void(0);" class="icon" onclick="myFunction()">
+                <i class="fa fa-bars"></i>
+            </a>
+        </div>
+
+        <div class="container">
+            <div class="center">
+                <h1>Jared Hirt</h1>
+                <p style="font-size: 1.2em; color: #555;">Computer Science Honours Student | Researcher | Developer</p>
+                
+                <img src="Headshot.JPG" alt="Jared Hirt Headshot">
+                
+                <div class="social-links" style="margin-top: 20px;">
+                    <a href="mailto:JaredHirt@hotmail.com" title="Email"><i class="fa fa-envelope" style="font-size:30px; margin: 0 15px;"></i></a>
+                    <a href="https://ca.linkedin.com/in/jared-hirt" title="LinkedIn"><i class="fa fa-linkedin" style="font-size:30px; margin: 0 15px;"></i></a>
+                    <a href="https://github.com/JaredHirt" title="GitHub"><i class="fa fa-github" style="font-size:30px; margin: 0 15px;"></i></a>
+                </div>
+            </div>
+
+            <br>
+        
+            <h2 id="ResearchInterests">
+                Research Interests
+                <br>
+            </h2>
+            <p>
+                Computer Vision, Foundation Models, AI for Healthcare, Robustness & Distribution Shift, Explainable AI (XAI), Low-Resource Generative AI, Mathematical Modeling.
+            </p>
+
+            <h2 id="Education">
+                Education
+                <br>
+            </h2>
+            <div class="project-grid">
+                <div class="project-card">
+                    <h3>
+                        University of Northern British Columbia 
+                    </h3>
+                    <h4>
+                        2022 - Expected May 2026
+                    </h4>
+                    <p>
+                        BSc in Computer Science, Honours Program <br>
+                        Minor in Management Information Systems (MIS) <br>
+                        <b>CGPA: 4.16 / 4.33</b> 
+                        <br>
+                        <a href="Transcript.pdf">Transcript</a>
+                    </p>
+                </div>
+            </div>
+
+            <h2 id="Publications">
+                Publications & Presentations
+                <br>
+            </h2>
+            <div class="project-grid">
+                <div class="project-card">
+                    <h3>
+                        Analysis of a Variable Region Size in Regional Voting
+                    </h3>
+                    <h4>
+                        August 2025
+                    </h4>
+                    <p>
+                        <i>Hirt, J. and Chen, L.</i> <br>
+                        IEEE 22nd International Conference on Ubiquitous Intelligence and Computing (UIC). <br>
+                        (Accepted for Oral Presentation)
+                    </p>
+                    <ul>
+                        <li>Independently derived mathematical theorems for election stability under concentrated noise.</li>
+                        <li>Designed multi-scale voting ensembles to mitigate spatially correlated data corruption.</li>
+                        <li> <a href="thesis.pdf">Take a look at my paper!</a> </li>
+                        <li> <a href="https://ieeexplore.ieee.org/document/11394903">https://ieeexplore.ieee.org/document/11394903</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <h2 id="ResearchProjects">
+                Research & Technical Projects
+                <br>
+            </h2>
+            <div class="project-grid">
+                <div class="project-card">
+                    <h3>
+                        Low Data AI For Healthcare Research: ConvKAN vs. CNN Performance
+                    </h3>
+                    <h4>
+                        Winter 2026 - Lead Researcher
+                    </h4>
+                    <ul>
+                        <li>Spearheaded an independent comparative research project evaluating Convolutional Kolmogorov-Arnold Networks (ConvKAN) against traditional CNN models using PyTorch.</li>
+                        <li>Trained CNN and ConvKAN models on Malaria blood smear samples on different dataset sizes to determine if ConvKAN can generalize with less training data.</li>
+                    </ul>
+                </div>
+
+                <div class="project-card">
+                    <h3>
+                        Generative AI for Indigenous Language Preservation (Dakelh)
+                    </h3>
+                    <h4>
+                        Fall 2025 - Software Engineering Project
+                    </h4>
+                    <ul>
+                        <li>Addressed extreme data scarcity for the endangered Dakelh language by engineering a Generative Language Model.</li>
+                        <li>Curated a specialized corpus from the Dakelh translation of the New Testament and implemented a custom Byte Pair Encoding (BPE) tokenizer to handle unique morphology.</li>
+                        <li>Trained the model using NanoGPT and Hugging Face Transformers, creating a model which is able to replicate Dakelh language patterns.</li>
+                    </ul>
+                </div>
+
+                <div class="project-card">
+                    <h3>
+                        Gamified ASL Fingerspelling System
+                    </h3>
+                    <h4>
+                        Fall 2025 - Social Robotics Capstone
+                    </h4>
+                    <ul>
+                        <li>Architected a computer vision pipeline using MediaPipe and Django to gamify ASL education.</li>
+                        <li>Identified failure modes in off-the-shelf models regarding fine-grained alphabet recognition; trained a custom gesture recognizer to achieve high-fidelity classification for all 26 letters.</li>
+                        <li>Designed a temporal classification extension using sequential hand landmarks to recognize dynamic gestures (e.g., 'J', 'Z').</li>
+                        <li><a href="projects/ASL/index.html">Try a modified javascript Speedy Signers demo here!</a></li>
+                    </ul>
+                </div>
+
+                <div class="project-card">
+                    <h3>
+                        Robust Consensus Algorithms (Honours Thesis)
+                    </h3>
+                    <h4>
+                        2024 - Present - Undergraduate Honors Researcher
+                    </h4>
+                    <ul>
+                        <li>Investigated the fragility of consensus algorithms against spatially correlated noise (analogous to sensor artifacts).</li>
+                        <li>Numerically evaluated stability formulas to identify the "edge of stability" across diverse noise configurations.</li>
+                        <li>Demonstrated that multi-scale regional voting acts as a stabilizing ensemble, reducing error rates compared to fixed-kernel baselines.</li>
+                        <li> Oral presentation at 22nd IEEE UIC Conference </li>
+                        <li> <a href="thesis.pdf">Take a look at my paper!</a> </li>
+                        <li> <a href="https://ieeexplore.ieee.org/document/11394903">https://ieeexplore.ieee.org/document/11394903</a></li>
+                    </ul>
+                </div>
+
+                <div class="project-card">
+                    <h3>
+                        Stock Ticker Game - Sole Developer
+                    </h3>
+                    <h4>
+                        2026 - Present
+                    </h4>
+                    <ul>
+                        <li>Created an online real-time version of the Board Game StockTicker.</li>
+                        <li>State management through Google Authentication.</li>
+                        <li>Data stored through Firebase and updated hourly using GitHub Tasks. </li>
+                        <li><a href="https://jared.hirt.ca/stockticker/index.html">Try Stock Ticker here!</a></li>
+                    </ul>
+                </div>
+
+                <div class="project-card">
+                    <h3>
+                        Grocery Helper Application
+                    </h3>
+                    <h4>
+                        Winter 2024 - Lead Developer
+                    </h4>
+                    <ul>
+                        <li>Led development of a mobile/web application using Flutter and Firebase.</li>
+                        <li>Engineered REST API integrations with TheMealDB and implemented persistent user state management with Google Authentication.</li>
+                        <li><a href="flutter/groceryhelper/index.html">Try a Grocery Helper Demo here!</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <h2 id="TeachingLeadership">
+                Teaching & Leadership
+                <br>
+            </h2>
+            <div class="project-grid">
+                <div class="project-card">
+                    <h3>
+                        University of Northern British Columbia
+                    </h3>
+                    <h4>
+                        2024 - Present - Teaching Assistant (Intro to Technology / Logic & Design / Computer Architecture)
+                    </h4>
+                    <ul>
+                        <li>Taught aerial data acquisition and photogrammetry pipelines using DJI Matrice 350 RTK drones; instructed students on processing raw visual data into 3D models.</li>
+                        <li>Taught Logic through Logisim and Verilog.</li>
+                        <li>Instructed labs on Aarch64 Assembly, GPIO, and Concurrent Programming.</li>
+                        <li>Delivered lectures and developed assignments for undergraduate labs.</li>
+                    </ul>
+                </div>
+
+                <div class="project-card">
+                    <h3>
+                        UNBC Computer Science Club
+                    </h3>
+                    <h4>
+                        2024 - Present - President
+                    </h4>
+                    <ul>
+                        <li>Revived the university's chapter of the ACM Intercollegiate Programming Competition (ICPC); established training infrastructure for future teams.</li>
+                        <li>Organized university-wide coding competitions, increasing student participation by 400%.</li>
+                    </ul>
+                </div>
+
+                <div class="project-card">
+                    <h3>
+                        UNBC JDC West Team
+                    </h3>
+                    <h4>
+                        2024 - Present - VP Technology
+                    </h4>
+                    <ul>
+                        <li>Secured historic 1st Place in Business Technology Management against top Western Canadian business schools.</li>
+                        <li>Led technical strategy for business case competitions, including executing cost-benefit analyses for technological integrations using the ADKAR framework.</li>
+                        <li>Raised funds for the Spirit of the North Healthcare Foundation to purchase medical equipment for rural hospitals.</li>
+                    </ul>
+                </div>
+
+                <div class="project-card">
+                    <h3>
+                        Quinson Elementary
+                    </h3>
+                    <h4>
+                        Winter 2025 - Volunteer Coding Instructor
+                    </h4>
+                    <ul>
+                        <li>Taught programming logic (loops, conditionals) to grades 4-7 using Scratch; guided students in building clones of Flappy Bird and platformers.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <h2 id="ProfessionalExperience">
+                Other Professional Experience
+                <br>
+            </h2>
+            <div class="project-grid">
+                <div class="project-card">
+                    <h3>
+                        Crossroads Brewing & Distillery
+                    </h3>
+                    <h4>
+                        2020 - 2025 - Line Cook
+                    </h4>
+                    <ul>
+                        <li>Maintained high performance in a fast-paced, high-pressure environment while balancing full-time academic studies.</li>
+                        <li>Prioritized tasks dynamically to meet fluctuating customer demand; ensured strict adherence to safety and organization standards.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <h2 id="TechnicalSkills">Technical Skills</h2>
+            <div class="project-grid">
+                <div class="project-card skill-category">
+                    <h3>Languages</h3>
+                    <div class="tags">
+                        <span class="tag beginner">Verilog</span>
+                        <span class="tag beginner">ARM Assembly</span>
+                        <span class="tag beginner">C++</span>
+                        <span class="tag intermediate">JavaScript</span>
+                        <span class="tag intermediate">SQL</span>
+                        <span class="tag intermediate">Dart</span>
+                        <span class="tag intermediate">Java</span>
+                        <span class="tag intermediate">Python</span>
+                    </div>
+                </div>
+                <div class="project-card skill-category">
+                    <h3>Frameworks & Libraries</h3>
+                    <div class="tags">
+                        <span class="tag beginner">NanoGPT</span>
+                        <span class="tag intermediate">MediaPipe</span>
+                        <span class="tag intermediate">Hugging Face</span>
+                        <span class="tag intermediate">Django</span>
+                        <span class="tag intermediate">Firebase</span>
+                        <span class="tag intermediate">Flutter</span>
+                        <span class="tag intermediate">PyTorch</span>
+                    </div>
+                </div>
+                <div class="project-card skill-category">
+                    <h3>Tools & Environments</h3>
+                    <div class="tags">
+                        <span class="tag intermediate">Logisim</span>
+                        <span class="tag intermediate">Git</span>
+                        <span class="tag intermediate">Linux (Ubuntu)</span>
+                        <span class="tag advanced">Microsoft 365</span>
+                        <span class="tag advanced">LaTeX</span>
+                    </div>
+                </div>
+            </div>
+
+            <h2 id="AwardsandScholarships">
+                Select Awards and Scholarships
+                <br>
+            </h2>
+            <div class="project-grid">
+                <div class="project-card">
+                    <h3>
+                        Awards & Competitions
+                    </h3>
+                    <p>
+                        <b>1st Place</b> - JDC West Business Technology Management - 2026 <br>
+                        <b>2nd Place</b> - UNBC Stock Pitch Competition - 2026 <br>
+                        <b>L.A. Lefebvre and Associates Award</b> (Merit-based, top CS student >90 credits, $1500) - 2025 <br>
+                        <b>Golden Key Honours Society</b> (Top 15% of students) - 2022 <br>
+                        <b>Computer Science Entrance Award</b> - 2022
+                    </p>
+                </div>
+
+                <div class="project-card">
+                    <h3>
+                        Scholarships
+                    </h3>
+                    <p>
+                        <b>BC Achievement Scholarship</b> (Top 8000 graduates) - 2022 <br>
+                        <b>District Authority Scholarship</b> (Top 5500 graduates) - 2022
+                    </p>
+                </div>
+            </div>
+
+            <h2 id="Service">
+                Service
+                <br>
+            </h2>
+            <div class="project-grid">
+                <div class="project-card">
+                    <h3>
+                        UNBC Senate Representative (FSE)
+                    </h3>
+                    <h4>
+                        2023 - 2025
+                    </h4>
+                    <p>
+                        Represented Faculty of Science and Engineering students; served on committees for Academic Affairs and Awards.
+                    </p>
+                </div>
+
+                <div class="project-card">
+                    <h3>
+                        PGSS Esports Coach
+                    </h3>
+                    <h4>
+                        2021 - 2023
+                    </h4>
+                    <p>
+                        Led high school team to win "Best in Western North America" (2022).
+                    </p>
+                </div>
+            </div>
+
+            <h2 id="Hobbies">
+                Hobbies
+                <br>
+            </h2>
+            <div class="project-grid">
+                <div class="project-card">
+                    <h3>
+                        Prince George Tapestry & Cantata Singers
+                    </h3>
+                    <h4>
+                        2017 - Present
+                    </h4>
+                    <p>
+                        The Prince George Tapestry Singers is a youth community choir in Prince George. I have also been a member of the Prince George Cantata Singers for 2 years. <br>
+                        As a singer in the Tapestry Singers we have received gold standing in the Cantando and Kiwanis music festival. <br>
+                        <a href="https://pgtapestry.ca/about-us/senior-singers">You can find out more about the PG Tapestry singers here!</a>
+                    </p>
+                </div>
             
-            <a href="#ResearchInterests" onclick="myFunction()">Research Interests</a>
-            <a href="#Education" onclick="myFunction()">Education</a>
-            <a href="#Publications" onclick="myFunction()">Publications</a>
-            <a href="#ResearchProjects" onclick="myFunction()">Research & Technical Projects</a>
-            <a href="#TeachingLeadership" onclick="myFunction()">Teaching & Leadership</a>
-            <a href="#ProfessionalExperience" onclick="myFunction()">Professional Experience</a>
-            <a href="#AwardsandScholarships" onclick="myFunction()">Awards and Scholarships</a>
-            <a href="#TechnicalSkills" onclick="myFunction()">Technical Skills</a>
-            <a href="#Service" onclick="myFunction()">Service</a>
-        </div>
-        <!-- "Hamburger menu" / "Bar icon" to toggle the navigation links -->
-        <a href="javascript:void(0);" class="icon" onclick="myFunction()">
-            <i class="fa fa-bars"></i>
-        </a>
-        </div>
-
-
-    <div class="container">
-
-
-        <div class="center">
-    <h1>Jared Hirt</h1>
-    <p style="font-size: 1.2em; color: #555;">Computer Science Honours Student | Researcher | Developer</p>
-    
-    <img src="Headshot.JPG" alt="Jared Hirt Headshot">
-    
-    <div class="social-links" style="margin-top: 20px;">
-        <a href="mailto:JaredHirt@hotmail.com" title="Email"><i class="fa fa-envelope" style="font-size:30px; margin: 0 15px;"></i></a>
-        <a href="https://ca.linkedin.com/in/jared-hirt" title="LinkedIn"><i class="fa fa-linkedin" style="font-size:30px; margin: 0 15px;"></i></a>
-        <a href="https://github.com/JaredHirt" title="GitHub"><i class="fa fa-github" style="font-size:30px; margin: 0 15px;"></i></a>
-    </div>
-</div>
-
-        <br>
-    
-        <h2 id="ResearchInterests">
-        Research Interests
-        <br>
-        </h2>
-
-        <p>
-            Computer Vision, Foundation Models, Robustness & Distribution Shift, AI for Healthcare, Low-Resource Generative AI.
-        </p>
-
-        <h2 id="Education">
-        Education
-        <br>
-        </h2>
-        <h3>
-            University of Northern British Columbia 
-        </h3>
-        <h4>
-            2022 - Present
-        </h4>
-        <p>
-            BSc in Computer Science, Honours Program <br>
-            Minor in Management Information Systems (MIS) <br>
-            <b>CGPA: 4.16 / 4.33</b> (Pure A+ record in 3rd/4th year coursework)
-            <br>
-            <a href="Transcript.pdf">Unofficial Transcript</a>
-        </p>
-
-
-        <h2 id="Publications">
-            Publications & Presentations
-            <br>
-            </h2>
-    
-    
-            <h3>
-                Analysis of a Variable Region Size in Regional Voting
-            </h3>
-            <h4>
-                August 2025
-            </h4>
-            <p>
-                <i>Hirt, J. and Chen, L.</i> <br>
-                IEEE 22nd International Conference on Ubiquitous Intelligence and Computing (UIC). <br>
-                (Accepted for Oral Presentation)
-            </p>
-            <ul>
-                <li>Independently derived mathematical theorems for election stability under concentrated noise.</li>
-                <li>Designed multi-scale voting ensembles to mitigate spatially correlated data corruption.</li>
-                <li> <a href="thesis.pdf">Take a look at my paper!</a> </li>
-            </ul>
-
-        <h2 id="ResearchProjects">
-        Research & Technical Projects
-        <br>
-        </h2>
-
-        <div class="project-grid">
-        <div class="project-card">
-        <h3>
-            Generative AI for Indigenous Language Preservation (Dakelh)
-        </h3>
-        <h4>
-            Fall 2025 - Software Engineering Project
-        </h4>
-        <ul>
-            <li>Addressed extreme data scarcity for the endangered Dakelh language by engineering a Generative Language Model.</li>
-            <li>Curated a specialized corpus from the Dakelh translation of the New Testament and implemented a custom <b>Byte Pair Encoding (BPE)</b> tokenizer to handle unique morphology.</li>
-            <li>Trained the model using <b>NanoGPT</b> and <b>Hugging Face Transformers</b>, creating a tool to generate synthetic educational text for language revitalization.</li>
-        </ul>
-        </div>
-
-
-        <div class="project-card">
-        <h3>
-            Gamified ASL Fingerspelling System
-        </h3>
-        <h4>
-            Fall 2025 - Social Robotics Capstone
-        </h4>
-        <ul>
-            <li>Architected a computer vision pipeline using <b>MediaPipe</b> and <b>Django</b> to gamify ASL education.</li>
-            <li>Identified failure modes in off-the-shelf models regarding fine-grained alphabet recognition; trained a custom gesture recognizer to achieve high-fidelity classification for all 26 letters.</li>
-            <li>Designed a temporal classification extension using sequential hand landmarks to recognize dynamic gestures (e.g., 'J', 'Z').</li>
-            <li><a href="projects/ASL/index.html">Try a modified javascript Speedy Signers demo here!</a></li>
-        </ul>
-        </div>
-
-
-        <div class="project-card">
-        <h3>
-            Robust Consensus Algorithms (Honours Thesis)
-        </h3>
-        <h4>
-            2024 - Present - Undergraduate Honors Researcher
-        </h4>
-        <ul>
-            <li>Investigated the fragility of consensus algorithms against spatially correlated noise (analogous to sensor artifacts).</li>
-            <li>Numerically evaluated stability formulas to identify the "edge of stability" across diverse noise configurations.</li>
-            <li>Demonstrated that multi-scale regional voting acts as a stabilizing ensemble, reducing error rates compared to fixed-kernel baselines.</li>
-            <li> Oral presentation at 22nd IEEE UIC Conference </li>
-            <li> <a href="thesis.pdf">Take a look at my paper!</a> </li>
-        </ul>
-        </div>
-
-
-        <div class="project-card">
-        <h3>
-            Grocery Helper Application
-        </h3>
-        <h4>
-            Winter 2024 - Lead Developer
-        </h4>
-        <ul>
-            <li>Led development of a mobile/web application using <b>Flutter</b> and <b>Firebase</b>.</li>
-            <li>Engineered REST API integrations with TheMealDB and implemented persistent user state management with Google Authentication.</li>
-            <li><a href="flutter/groceryhelper/index.html">Try a Grocery Helper Demo here!</a></li>
-        </ul>
-        </div>
-        </div>
-
-
-        <h2 id="TeachingLeadership">
-        Teaching & Leadership
-        <br>
-        </h2>
-
-        <h3>
-            University of Northern British Columbia
-        </h3>
-        <h4>
-            2024 - Present - Teaching Assistant (Intro to Technology / Computer Architecture)
-        </h4>
-        <ul>
-            <li>Taught aerial data acquisition and <b>photogrammetry pipelines</b> using DJI Matrice 350 RTK drones; instructed students on processing raw visual data into 3D models.</li>
-            <li>Instructed labs on Aarch64 Assembly, GPIO, and Concurrent Programming.</li>
-            <li>Delivered guest lectures and developed curriculum for undergraduate labs.</li>
-        </ul>
-
-        <h3>
-            UNBC Computer Science Club
-        </h3>
-        <h4>
-            2024 - Present - President
-        </h4>
-        <ul>
-            <li>Revived the university's chapter of the <b>ACM Intercollegiate Programming Competition (ICPC)</b>; established training infrastructure for future teams.</li>
-            <li>Organized university-wide coding competitions, increasing student participation by 400%.</li>
-        </ul>
-
-        <h3>
-            UNBC JDC West Team
-        </h3>
-        <h4>
-            2024 - Present - VP Technology
-        </h4>
-        <ul>
-            <li>Led technical strategy for business case competitions; raised funds for the <b>Spirit of the North Healthcare Foundation</b> to purchase medical equipment for rural hospitals.</li>
-        </ul>
-
-        <h3>
-            Quinson Elementary
-        </h3>
-        <h4>
-            Winter 2025 - Volunteer Coding Instructor
-        </h4>
-        <ul>
-            <li>Taught programming logic (loops, conditionals) to grades 4-7 using Scratch; guided students in building clones of Flappy Bird and platformers.</li>
-        </ul>
-
-        <h2 id="ProfessionalExperience">
-        Other Professional Experience
-        <br>
-        </h2>
-
-        <h3>
-            Crossroads Brewing & Distillery
-        </h3>
-        <h4>
-            2020 - 2025 - Line Cook
-        </h4>
-        <ul>
-            <li>Maintained high performance in a fast-paced, high-pressure environment while balancing full-time academic studies.</li>
-            <li>Prioritized tasks dynamically to meet fluctuating customer demand; ensured strict adherence to safety and organization standards.</li>
-        </ul>
-
-
-        <h2 id="TechnicalSkills">Technical Skills</h2>
-<div class="skills-container">
-    <div class="skill-category">
-        <h3>Languages</h3>
-        <div class="tags">
-            <span class="tag intermediate">Java</span>
-            <span class="tag intermediate">Python</span>
-            <span class="tag intermediate">Dart</span>
-            <span class="tag beginner">C++</span>
-        </div>
-    </div>
-    <div class="skill-category">
-        <h3>Frameworks & Tools</h3>
-        <div class="tags">
-            <span class="tag intermediate">Django</span>
-            <span class="tag intermediate">Flutter</span>
-            <span class="tag advanced">LaTeX</span>
-            <span class="tag beginner">NanoGPT</span>
-        </div>
-    </div>
-</div>
-
-
-        <h2 id="AwardsandScholarships">
-        Select Awards and Scholarships
-        <br>
-        </h2>
-
-        <h3>
-            Awards
-        </h3>
-        <p>
-            <b>Golden Key Honours Society</b> (Top 15% of students) - 2022 <br>
-            <b>L.A. Lefebvre and Associates Award</b> (Merit-based, top CS student >90 credits, $1500) - 2025 <br>
-            <b>Computer Science Entrance Award</b> - 2022
-        </p>
-
-        <h3>
-            Scholarships
-        </h3>
-        <p>
-            <b>BC Achievement Scholarship</b> (Top 8000 graduates) - 2022 <br>
-            <b>District Authority Scholarship</b> (Top 5500 graduates) - 2022
-        </p>
-
-
-        <h2 id="Service">
-        Service
-        <br>
-        </h2>
-
-        <h3>
-            UNBC Senate Representative (FSE)
-        </h3>
-        <h4>
-            2023 - 2025
-        </h4>
-        <p>
-            Represented Faculty of Science and Engineering students; served on committees for Academic Affairs and Awards.
-        </p>
-
-        <h3>
-            PGSS Esports Coach
-        </h3>
-        <h4>
-            2021 - 2023
-        </h4>
-        <p>
-            Led high school team to win "Best in Western North America" (2022).
-        </p>
-
-        <h2 id="Hobbies">
-            Hobbies
-            <br>
-            </h2>
-    
-            <h3>
-                Prince George Tapestry Singers
-            </h3>
-            <h4>
-                2017 - Present
-            </h4>
-            <p>
-                The Prince George Tapestry Singers is a youth community choir in Prince George <br>
-                As a singer in the Tapestry Singers we have received gold standing in the Cantando and Kiwanis music festival <br>
-                <a href="https://pgtapestry.ca/about-us/senior-singers">You can find out more about the PG Tapestry singers here!</a>
-            </p>
-    
-    
-            <h3>
-                Plaza 400 Toastmasters Club
-            </h3>
-            <h4>
-                2024 - Present
-            </h4>
-            <p>
-                I am a member of the Plaza 400 Toastmasters club <br>
-                Toastmasters is an organization which aims to improve the leadership skills of members <br>
-                Some of the skills that are worked on are public speaking, speeches, and parlimentary procedure<br>
-                <a href="https://plaza400.toastmastersclubs.org/">Here is the club's website</a>
-    
-            </p>
+                <div class="project-card">
+                    <h3>
+                        Plaza 400 Toastmasters Club
+                    </h3>
+                    <h4>
+                        2024 - 2026
+                    </h4>
+                    <p>
+                        I was a member of the Plaza 400 Toastmasters club. <br>
+                        Toastmasters is an organization which aims to improve the leadership skills of members. <br>
+                        Some of the skills that are worked on are public speaking, speeches, and parliamentary procedure.<br>
+                        <a href="https://plaza400.toastmastersclubs.org/">Here is the club's website</a>
+                    </p>
+                </div>
+            </div>
 
         </div>
-    </body>
-
-
-
-    <script>
-        function myFunction() {
-          var x = document.getElementById("myLinks");
-          if (x.style.display === "block") {
-            x.style.display = "none";
-          } else {
-            x.style.display = "block";
-          }
-        }
+        
+        <script>
+            function myFunction() {
+                var x = document.getElementById("myLinks");
+                if (x.style.display === "block") {
+                    x.style.display = "none";
+                } else {
+                    x.style.display = "block";
+                }
+            }
         </script>
+    </body>
 </html>
